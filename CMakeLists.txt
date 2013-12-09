@@ -30,4 +30,21 @@ pods_install_pkg_config_file(plot-server-api
     VERSION 0.0.1)
 
 
+add_library( plot-server-plotter SHARED
+  src/plotter/plotter.cpp
+)
+pods_install_headers(
+  src/plotter/plotter.hpp
+  DESTINATION
+  plot-server/plotter
+)
+pods_use_pkg_config_packages(plot-server-plotter plot-server-api)
+pods_install_libraries( plot-server-plotter )
+pods_install_pkg_config_file(plot-server-plotter
+    CFLAGS
+    LIBS -lplot-server-plotter
+    REQUIRES plot-server-api
+    VERSION 0.0.1)
+
+
 add_subdirectory( test )

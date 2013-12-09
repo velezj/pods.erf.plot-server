@@ -49,7 +49,7 @@ namespace plot_server {
 	return attributes.get<T>( at );
       }
       template< class T >
-      T get( const std::string& at, const T& default_val )
+      T get( const std::string& at, const T& default_val ) const
       {
 	return attributes.get<T>( at, default_val );
       }
