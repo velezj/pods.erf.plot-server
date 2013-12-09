@@ -15,7 +15,9 @@ int main( int argc, char** argv )
   }
   std::vector<data_point_t> series_2;
   for( double x = 1.1; x < 10.0; x *= 1.37 ) {
-    series_2.push_back( data_point_t( -x, x, 1.0 ) );
+    data_point_t dp = data_point_t( -x, x, 1.0 );
+    dp.put( "attributes.weight", 0.5 );
+    series_2.push_back( dp );
   }
   
   // add teh data series
