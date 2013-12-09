@@ -1,9 +1,6 @@
 
 #include "plot.hpp"
 #include <erf-couchdb/couchdb.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-#include <iostream>
-
 
 using namespace boost::property_tree;
 using namespace couchdb;
@@ -74,10 +71,6 @@ namespace plot_server {
 	doc.add_child( "data_series.data.", dpoint.attributes );
       }
       doc.put_child( "config", series_config );
-
-      // debug write out ptree as xml
-      xml_parser::write_xml( std::cout, doc );
-
       ptree res = internal::globaldb().save( doc );
       return res.get<string>( "id" );
     }
