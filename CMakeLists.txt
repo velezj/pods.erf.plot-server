@@ -14,10 +14,10 @@ endif (USE_PEDANTIC)
 
 
 add_library( plot-server-api SHARED
-  src/plot.cpp
+  src/api/plot.cpp
 )
 pods_install_headers(
-  src/plot.hpp
+  src/api/plot.hpp
   DESTINATION
   plot-server/api
 )
