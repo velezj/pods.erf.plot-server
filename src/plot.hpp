@@ -2,10 +2,13 @@
 #if !defined( __PLOT_SERVER_API_plot_HPP__ )
 #define __PLOT_SERVER_API_plot_HPP__
 
-#include <string>
+
 #include <boost/property_tree/ptree.hpp>
 #include <boost/lexical_cast.hpp>
+#include <string>
+#include <vector>
 #include <map>
+
 
 namespace plot_server {
   namespace api {
@@ -23,9 +26,9 @@ namespace plot_server {
 
       data_point_t( const double& x, const double& y, const double& z ) 
       {
-	set( "x", x );
-	set( "y", y );
-	set( "z", z );
+	put( "x", x );
+	put( "y", y );
+	put( "z", z );
       }
       data_point_t( const boost::property_tree::ptree& data )
       {
@@ -38,6 +41,7 @@ namespace plot_server {
       template< class T >
       data_point_t& put( const std::string& at, const T& val ) {
 	attributes.put( at, val );
+	return *this;
       }
       template<class T>
       T get( const std::string& at ) const

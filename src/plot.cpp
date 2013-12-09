@@ -1,6 +1,8 @@
 
 #include "plot.hpp"
 #include <erf-couchdb/couchdb.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+#include <iostream>
 
 
 using namespace boost::property_tree;
@@ -16,7 +18,7 @@ namespace plot_server {
 
       //=============================================================
 
-      static Couchdb _global_couchdb( "localhost:5984/plots-database/" );
+      static Couchdb _global_couchdb( boost::network::uri::uri("http://localhost:5984/plots-database/") );
       
       //=============================================================
       
@@ -69,11 +71,15 @@ namespace plot_server {
     {
       ptree doc;
       for( auto dpoint : data ) {
-	doc.add_child( "data_series.data", dpoint.attributes );
+	doc.add_child( "data_series.data.", dpoint.attributes );
       }
       doc.put_child( "config", series_config );
-      ptree res = globaldb.save( doc );
-      return res.get<string>(id);
+
+      // debug write out ptree as xml
+      xml_parser::write_xml( std::cout, doc );
+
+      ptree res = internal::globaldb().save( doc );
+      return res.get<string>( "id" );
     }
 
 
@@ -83,8 +89,8 @@ namespace plot_server {
 				  const string& plot_id )
     {
       ptree plot_doc = internal::fetch_plot( plot_id );
-      plot_doc.add( "plot.data_series.id", data_series_id );
-      ptree res = globaldb.save( plot_doc, plot_id );
+      plot_doc.add( "plot.data_series.", data_series_id );
+      ptree res = internal::globaldb().save( plot_doc, plot_id );
     }
 
 
@@ -94,8 +100,8 @@ namespace plot_server {
 				    const string& plot_sequence_id )
     {
       ptree seq_doc = internal::fetch_plot_sequence( plot_sequence_id );
-      seq_doc.add( "plot_sequence.plots.id", plot_id );
-      ptree res = globaldb.save( seq_doc, plot_sequence_id );
+      seq_doc.add( "plot_sequence.plots.", plot_id );
+      ptree res = internal::globaldb().save( seq_doc, plot_sequence_id );
     }
 
     //=============================================================
@@ -106,7 +112,7 @@ namespace plot_server {
     {
       ptree plot_doc;
       plot_doc.put_child( "config", plot_config );
-      ptree res = globaldb.save( plot_doc );
+      ptree res = internal::globaldb().save( plot_doc );
       string id = res.get<string>("id");
       for( string series_id : data_series ) {
 	add_data_series_to_plot( series_id, id );
@@ -123,7 +129,7 @@ namespace plot_server {
     {
       ptree seq_doc;
       seq_doc.put_child( "config", sequence_config );
-      ptree res = globaldb.save( seq_doc );
+      ptree res = internal::globaldb().save( seq_doc );
       string id = res.get<string>( "id" );
       for( string plot_id : plots ) {
 	add_plot_to_plot_sequence( plot_id, id );
