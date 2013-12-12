@@ -1,0 +1,15 @@
+{
+   "_id": "_design/docs_by_type",
+   "language": "javascript",
+   "views": {
+       "all_data_series": {
+           "map": "function(doc) {\n  if( doc.data_series ) {\n    emit(null, doc);\n  }\n}"
+       },
+       "all_plots": {
+           "map": "function(doc) {\n  if( doc.plot ) {\n    emit(null, doc);\n  }\n}"
+       },
+       "all_plot_sequences": {
+           "map": "function(doc) {\n  if( doc.plot_sequence ) {\n    emit(null, doc);\n  }\n}"
+       }
+   }
+}

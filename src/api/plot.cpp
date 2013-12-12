@@ -1,6 +1,8 @@
 
 #include "plot.hpp"
 #include <erf-couchdb/couchdb.hpp>
+#include <boost/chrono.hpp>
+#include <sstream>
 
 using namespace boost::property_tree;
 using namespace couchdb;
@@ -71,6 +73,9 @@ namespace plot_server {
 	doc.add_child( "data_series.data.", dpoint.attributes );
       }
       doc.put_child( "config", series_config );
+      std::ostringstream oss;
+      oss << boost::chrono::system_clock::now();
+      doc.put( "created" , oss.str() );
       ptree res = internal::globaldb().save( doc );
       return res.get<string>( "id" );
     }
@@ -105,6 +110,9 @@ namespace plot_server {
     {
       ptree plot_doc;
       plot_doc.put_child( "config", plot_config );
+      std::ostringstream oss;
+      oss << boost::chrono::system_clock::now();
+      plot_doc.put( "created" , oss.str() );
       ptree res = internal::globaldb().save( plot_doc );
       string id = res.get<string>("id");
       for( string series_id : data_series ) {
@@ -122,6 +130,9 @@ namespace plot_server {
     {
       ptree seq_doc;
       seq_doc.put_child( "config", sequence_config );
+      std::ostringstream oss;
+      oss << boost::chrono::system_clock::now();
+      seq_doc.put( "created" , oss.str() );
       ptree res = internal::globaldb().save( seq_doc );
       string id = res.get<string>( "id" );
       for( string plot_id : plots ) {

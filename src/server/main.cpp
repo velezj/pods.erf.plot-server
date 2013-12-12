@@ -5,6 +5,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <boost/chrono.hpp>
+#include <ctime>
 
 static int handle_plot_uri_test( struct mg_connection *conn )
 {
@@ -17,14 +19,39 @@ static int handle_plot_uri_test( struct mg_connection *conn )
 
 static int handle_plot_listing( struct mg_connection* conn )
 {
+  std::cout << "HANDLE plot-listing" << std::endl;
   std::vector<std::string> plot_ids =
     plot_server::api::fetch_known_plots();
+  std::cout << "  -- found " << plot_ids.size() << " plots" << std::endl;
   std::ostringstream oss;
   oss << "HTTP/1.0 200 ok\r\n\r\n";
   oss << "<html><body>";
   oss << "<ol>" << std::endl;
   for( std::string id : plot_ids ) {
-    oss << "<li>" << id << "  <a href=\"plot?" << id << "\"/>" << "</li>" << std::endl;
+    boost::property_tree::ptree plot_doc = plot_server::api::internal::fetch_plot( id );
+    std::cout << "  -- fetch plot doc: " << id << std::endl;
+    oss << "<li>  <a href=\"plot?" << id << "\">" << id << "</a>";
+    
+    if( plot_doc.get("created", "") != "" ) {
+      boost::chrono::system_clock::time_point tp;
+      std::istringstream iss( plot_doc.get<std::string>("created"));
+      iss >> tp;
+      boost::chrono::system_clock::time_point now = 
+	boost::chrono::system_clock::now();
+      boost::chrono::minutes diff_min = 
+	boost::chrono::duration_cast<boost::chrono::minutes>( now - tp );
+      
+      if( diff_min.count() < 60 ) {
+	oss << "<span style=\"color : red\">[created " << diff_min.count() << " minutes ago!]</span>";
+      } else {
+	
+	time_t created_time = boost::chrono::system_clock::to_time_t(tp);
+	oss << "[created on: " << ctime(&created_time) << "]";
+	
+      }
+    }   
+    oss << "</li>";
+    oss << std::endl;
   }
   oss << "</ol>";
   oss << "</body></html>" << std::endl;
