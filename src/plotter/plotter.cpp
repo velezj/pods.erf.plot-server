@@ -106,21 +106,26 @@ namespace plot_server {
 		   std::ostream& out )
 	{
 
+	  // get the wanted columns of data_points for gnuplot
+	  std::vector<std::string> wanted_attributes;
+	  if( plot_doc.get_child_optional( "config.wanted_attributes" ) ) {
+	    for( ptree::value_type atts : plot_doc.get_child( "config.wanted_attributes" ) ) {
+	      wanted_attributes.push_back( atts.second.data() );
+	    }
+	  } else {
+	    wanted_attributes.push_back( "x" );
+	    wanted_attributes.push_back( "y" );
+	    wanted_attributes.push_back( "z" );
+	  }
+
 	  // ok, we will create a temporary data file with the
 	  // series
 	  std::ofstream ftemp( "temp.dat" );
 	  for( ptree s : series ) {
 	    for( ptree::value_type data_doc : s.get_child( "data_series.data" ) ) {
 	      data_point_t d = data_point_t( data_doc.second );
-	      ftemp << d.get("x", 0.0) << " "
-		    << d.get("y", 0.0) << " "
-		    << d.get("z", 0.0) << " ";
-	      for( ptree::value_type att : d.attributes ) {
-		if( att.first != "x" &&
-		    att.first != "y" &&
-		    att.first != "z" ) {
-		  ftemp << att.second.data() << " ";
-		}
+	      for( auto attr : wanted_attributes ) {
+		ftemp << d.get(attr, 0.0) << " ";
 	      }
 	      ftemp << std::endl;
 	    }
