@@ -100,6 +100,28 @@ namespace plot_server {
     
     //===============================================================
 
+    // Description:
+    // Returns a list of all known series ids
+    std::vector<std::string>
+    fetch_known_data_series();
+
+    //===============================================================
+
+    // Description:
+    // Returns a list of all known plot ids
+    std::vector<std::string>
+    fetch_known_plots();
+
+    //===============================================================
+
+    // Description:
+    // Returns a list of all known plot sequence ids
+    std::vector<std::string>
+    fetch_known_plot_sequences();
+
+    //===============================================================
+
+
 
     // Description:
     // Internal API

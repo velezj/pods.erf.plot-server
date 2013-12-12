@@ -47,4 +47,11 @@ pods_install_pkg_config_file(plot-server-plotter
     VERSION 0.0.1)
 
 
+add_executable( plot-server-server
+  src/server/main.cpp
+)
+pods_use_pkg_config_packages(plot-server-server mongoose-4.1 plot-server-api plot-server-plotter)
+pods_install_executables( plot-server-server )
+
+
 add_subdirectory( test )

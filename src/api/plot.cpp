@@ -131,8 +131,44 @@ namespace plot_server {
     }
     
     //=============================================================
+
+    std::vector<std::string>
+    fetch_known_data_series()
+    {
+      ptree view = internal::globaldb().fetch( std::string("_design/docs_by_type/_view/all_data_series") );
+      std::vector<std::string> ids;
+      for( ptree::value_type c : view.get_child( "rows" ) ) {
+	ids.push_back( c.second.get<std::string>("id") );
+      }
+      return ids;
+    }
+
     //=============================================================
+
+    std::vector<std::string>
+    fetch_known_plots()
+    {
+      ptree view = internal::globaldb().fetch( std::string("_design/docs_by_type/_view/all_plots") );
+      std::vector<std::string> ids;
+      for( ptree::value_type c : view.get_child( "rows" ) ) {
+	ids.push_back( c.second.get<std::string>("id") );
+      }
+      return ids;
+    }
+
     //=============================================================
+
+    std::vector<std::string>
+    fetch_known_plot_sequences()
+    {
+      ptree view = internal::globaldb().fetch( std::string("_design/docs_by_type/_view/all_plot_sequences") );
+      std::vector<std::string> ids;
+      for( ptree::value_type c : view.get_child( "rows" ) ) {
+	ids.push_back( c.second.get<std::string>("id") );
+      }
+      return ids;
+    }
+
     //=============================================================
     //=============================================================
     //=============================================================
