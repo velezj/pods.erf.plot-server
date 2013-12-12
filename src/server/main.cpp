@@ -19,17 +19,14 @@ static int handle_plot_uri_test( struct mg_connection *conn )
 
 static int handle_plot_listing( struct mg_connection* conn )
 {
-  std::cout << "HANDLE plot-listing" << std::endl;
   std::vector<std::string> plot_ids =
     plot_server::api::fetch_known_plots();
-  std::cout << "  -- found " << plot_ids.size() << " plots" << std::endl;
   std::ostringstream oss;
   oss << "HTTP/1.0 200 ok\r\n\r\n";
   oss << "<html><body>";
   oss << "<ol>" << std::endl;
   for( std::string id : plot_ids ) {
     boost::property_tree::ptree plot_doc = plot_server::api::internal::fetch_plot( id );
-    std::cout << "  -- fetch plot doc: " << id << std::endl;
     oss << "<li>  <a href=\"plot?" << id << "\">" << id << "</a>";
     
     if( plot_doc.get("created", "") != "" ) {
@@ -66,9 +63,7 @@ static int handle_plot_serve( const std::string& plot_id,
 {
   std::ostringstream oss;
   oss << "HTTP/1.0 200 OK\r\n\r\n";
-  oss << "<html><body>" << std::endl;
   plot_server::plotter::plot( plot_id, oss );
-  oss << "</body></html>" << std::endl;
   mg_write( conn, oss.str().c_str(), oss.str().size() );
   return 1;
 }

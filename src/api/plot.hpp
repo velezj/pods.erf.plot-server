@@ -5,6 +5,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/optional.hpp>
 #include <string>
 #include <vector>
 #include <map>
@@ -62,7 +63,8 @@ namespace plot_server {
     // adds a data series and returns it's id
     std::string
     add_data_series( const std::vector<data_point_t>& data ,
-		     const boost::property_tree::ptree& series_config );
+		     const boost::property_tree::ptree& series_config,
+		     const boost::optional<std::string> id = boost::optional<std::string>() );
 
 
     //===============================================================
@@ -72,7 +74,8 @@ namespace plot_server {
     // The plot will include the given data series
     std::string
     create_plot( const boost::property_tree::ptree& plot_config,
-		 const std::vector<std::string>& data_series );
+		 const std::vector<std::string>& data_series,
+		 const boost::optional<std::string> id = boost::optional<std::string>()  );
 
 
     //===============================================================
@@ -89,7 +92,8 @@ namespace plot_server {
     // Also adds the given plots to the sequence in order
     std::string
     create_plot_sequence( const boost::property_tree::ptree& sequence_config,
-			  const std::vector<std::string>& plots );
+			  const std::vector<std::string>& plots,
+			  const boost::optional<std::string> id = boost::optional<std::string>() );
 
     //===============================================================
 

@@ -66,7 +66,8 @@ namespace plot_server {
 
     string
     add_data_series( const vector<data_point_t>& data ,
-		     const ptree& series_config )
+		     const ptree& series_config,
+		     const boost::optional<std::string> wanted_id )
     {
       ptree doc;
       for( auto dpoint : data ) {
@@ -76,7 +77,13 @@ namespace plot_server {
       std::ostringstream oss;
       oss << boost::chrono::system_clock::now();
       doc.put( "created" , oss.str() );
-      ptree res = internal::globaldb().save( doc );
+      ptree res;
+      if( wanted_id ) {
+	res = internal::globaldb().try_ensure_substructure( wanted_id.get(),
+							    doc );
+      } else {
+	res = internal::globaldb().save( doc );
+      }
       return res.get<string>( "id" );
     }
 
@@ -106,14 +113,21 @@ namespace plot_server {
 
     string
     create_plot( const ptree& plot_config,
-		 const vector<string>& data_series )
+		 const vector<string>& data_series,
+		 const boost::optional<std::string> wanted_id )
     {
       ptree plot_doc;
       plot_doc.put_child( "config", plot_config );
       std::ostringstream oss;
       oss << boost::chrono::system_clock::now();
       plot_doc.put( "created" , oss.str() );
-      ptree res = internal::globaldb().save( plot_doc );
+      ptree res;
+      if( wanted_id ) {
+	res = internal::globaldb().try_ensure_substructure( wanted_id.get(),
+							    plot_doc );
+      } else {
+	res = internal::globaldb().save( plot_doc );
+      }
       string id = res.get<string>("id");
       for( string series_id : data_series ) {
 	add_data_series_to_plot( series_id, id );
@@ -126,14 +140,21 @@ namespace plot_server {
 
     string
     create_plot_sequence( const ptree& sequence_config,
-			  const vector<string>& plots )
+			  const vector<string>& plots,
+			  const boost::optional<std::string> wanted_id )
     {
       ptree seq_doc;
       seq_doc.put_child( "config", sequence_config );
       std::ostringstream oss;
       oss << boost::chrono::system_clock::now();
       seq_doc.put( "created" , oss.str() );
-      ptree res = internal::globaldb().save( seq_doc );
+      ptree res;
+      if( wanted_id ) {
+	res = internal::globaldb().try_ensure_substructure( wanted_id.get(), 
+							    seq_doc );
+      } else {
+	res = internal::globaldb().save( seq_doc );
+      }
       string id = res.get<string>( "id" );
       for( string plot_id : plots ) {
 	add_plot_to_plot_sequence( plot_id, id );
