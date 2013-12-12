@@ -127,8 +127,29 @@ namespace plot_server {
 	  }
 	  ftemp.close();
 
+	  // get the configuration for the gnuplot
+	  std::string terminal 
+	    = plot_doc.get( "config.terminal",
+			    "svg size 400,400 mouse standalone enhanced" );
+
+	  std::string plot_prefix
+	    = plot_doc.get( "config.plot_prefix",
+			    "splot" );
+	  std::string plot_postfix
+	    = plot_doc.get( "config.plot_postfix",
+			    "" );
+	  std::string extra_gnuplot_commands
+	    = plot_doc.get( "config.extra_gnuplot_commands",
+			    "" );
+	  
+	  std::ostringstream oss;
+	  oss << "gnuplot" << " -e 'set terminal " << terminal << "' ";
+	  oss << "-e 'set output \"temp.svg\"' ";
+	  oss << "-e '" << plot_prefix << " \"temp.dat\" " << plot_postfix << "'";
+	  oss << extra_gnuplot_commands;
+
 	  // create gnuplot command line to plot the given
-	  system( "gnuplot -e 'set terminal svg size 400,400 mouse standalone enhanced' -e 'set output \"temp.svg\"' -e 'splot \"temp.dat\"'" );
+	  system( oss.str().c_str() );
 
 	  // ok, now copy the resulting svg (temp.svg) into the output stream
 	  std::ifstream fin( "temp.svg" );

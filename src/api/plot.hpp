@@ -62,10 +62,11 @@ namespace plot_server {
     // Description:
     // adds a data series and returns it's id
     std::string
-    add_data_series( const std::vector<data_point_t>& data ,
-		     const boost::property_tree::ptree& series_config,
-		     const boost::optional<std::string> id = boost::optional<std::string>() );
-
+    add_data_series
+    ( const std::vector<data_point_t>& data ,
+      const boost::property_tree::ptree& series_config,
+      const boost::optional<std::string> id = boost::optional<std::string>() );
+    
 
     //===============================================================
 
@@ -73,10 +74,11 @@ namespace plot_server {
     // Creates a new plot and returns it's ID
     // The plot will include the given data series
     std::string
-    create_plot( const boost::property_tree::ptree& plot_config,
-		 const std::vector<std::string>& data_series,
-		 const boost::optional<std::string> id = boost::optional<std::string>()  );
-
+    create_plot
+    ( const boost::property_tree::ptree& plot_config,
+      const std::vector<std::string>& data_series,
+      const boost::optional<std::string> id = boost::optional<std::string>() );
+    
 
     //===============================================================
 
@@ -91,10 +93,11 @@ namespace plot_server {
     // Creates a new plot sequence and return it's ID
     // Also adds the given plots to the sequence in order
     std::string
-    create_plot_sequence( const boost::property_tree::ptree& sequence_config,
-			  const std::vector<std::string>& plots,
-			  const boost::optional<std::string> id = boost::optional<std::string>() );
-
+    create_plot_sequence
+    ( const boost::property_tree::ptree& sequence_config,
+      const std::vector<std::string>& plots,
+      const boost::optional<std::string> id = boost::optional<std::string>() );
+    
     //===============================================================
 
     // Description:
