@@ -29,7 +29,7 @@ static int handle_plot_listing( struct mg_connection* conn )
   oss << "<ol>" << std::endl;
   for( std::string id : plot_ids ) {
     boost::property_tree::ptree plot_doc = plot_server::api::internal::fetch_plot( id );
-    oss << "<li>  <a href=\"plot?plot_id=" << id << "\">" << id << "</a>";
+    oss << "<li style=\"text-align : justify\">  <a href=\"plot?plot_id=" << id << "\">" << id << "</a>";
     oss << "  (<a href=\"plot?plot_id=" << id << "&interactive=true\">interactive</a>) ";
     
     if( plot_doc.get("created", "") != "" ) {
@@ -41,6 +41,7 @@ static int handle_plot_listing( struct mg_connection* conn )
       boost::chrono::minutes diff_min = 
 	boost::chrono::duration_cast<boost::chrono::minutes>( now - tp );
       
+      oss << "<div style=\"text-align : right; font-size : x-small\">";
       if( diff_min.count() < 60 ) {
 	oss << "<span style=\"color : red\">[created " << diff_min.count() << " minutes ago!]</span>";
       } else {
@@ -49,6 +50,7 @@ static int handle_plot_listing( struct mg_connection* conn )
 	oss << "[created on: " << ctime(&created_time) << "]";
 	
       }
+      oss << "</div>";
     }   
     oss << "</li>";
     oss << std::endl;
