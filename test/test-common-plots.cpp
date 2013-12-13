@@ -25,7 +25,7 @@ int main( int argc, char** argv )
   }
   
   // add teh data series
-  std::string series_1_id = add_data_series( series_1, ptree() );
+  std::string series_1_id = add_data_series( series_1, ptree(), std::string("gaussian(5,2)"));
   std::string series_2_id = add_data_series( series_2, ptree() );
 
   // add a plot with only series 1  
@@ -37,7 +37,7 @@ int main( int argc, char** argv )
   std::vector< std::string > plot_2_series;
   plot_2_series.push_back( series_1_id );
   plot_2_series.push_back( series_2_id );
-  std::string plot_2 = create_plot( ptree(), plot_2_series );
+  std::string plot_2 = create_plot( ptree(), plot_2_series, std::string("test-plot-2") );
   
 
   // add a sequence with both plots
@@ -53,7 +53,8 @@ int main( int argc, char** argv )
 
   // create boxplot of the data
   std::string boxplot_1_ds = 
-    create_quantile_data_series( { series_1_id, series_2_id } );
+    create_quantile_data_series( { series_1_id, series_2_id },
+				 std::string("test-boxplot") );
   std::string boxplot_1 = create_box_plot( { series_1_id },
 					   "y", "x", "z" );
     

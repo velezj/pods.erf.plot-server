@@ -119,6 +119,9 @@ namespace plot_server {
 	  } else {
 	    wanted_attributes = { "x", "y", "z" };
 	  }
+
+	  // create a composite name of the series in this plot
+	  std::ostringstream s_title_oss;
 	  
 	  // ok, we will create a temporary data file with the
 	  // series
@@ -133,6 +136,11 @@ namespace plot_server {
 	      }
 	      ftemp << std::endl;
 	    }
+	    if( s_title_oss.str().size() > 0 ) {
+	      s_title_oss << " & ";
+	    }
+	    s_title_oss << s.get( "config.title", 
+				  s.get( "_id", "" ) );
 	  }
 	  ftemp.close();
 
@@ -140,6 +148,9 @@ namespace plot_server {
 	  std::string title 
 	    = plot_doc.get( "config.title",
 			    plot_doc.get( "_id", "plot" ) );
+	  std::string series_title 
+	    = plot_doc.get( "config.series_title",
+			    s_title_oss.str() );
 	  std::string terminal 
 	    = plot_doc.get( "config.terminal",
 			    /*"svg size 400,400 mouse standalone enhanced"*/
@@ -170,11 +181,12 @@ namespace plot_server {
 	  post_out << "# start of plot " << plot_doc.get("id","unk") << std::endl;
 	  // write out the gnuplot script
 	  if( replot == false ) {
+	    pre_out << "set title \"" << title << "\"" << std::endl;
 	    pre_out << "set terminal " << terminal << std::endl;
 	    pre_out << "set output \"" << output_name << "\"" << std::endl;
-	    plot_out << plot_prefix << " \"" << data_filename << "\" title \"" << title<< "\" "  << plot_postfix;
+	    plot_out << plot_prefix << " \"" << data_filename << "\" title \"" << series_title << "\" "  << plot_postfix;
 	  } else {
-	    plot_out << ", \"" << data_filename << "\" " << " title \"" << title<< "\" "  << plot_postfix;
+	    plot_out << ", \"" << data_filename << "\" " << " title \"" << series_title << "\" "  << plot_postfix;
 	  }
 	  pre_out << pre_gnuplot_commands << std::endl;
 	  post_out << extra_gnuplot_commands << std::endl;
@@ -256,21 +268,22 @@ namespace plot_server {
 		    << pre_script_fn << " " 
 		    << script_filename << " "
 		    << post_script_fn << std::endl;
-
+	  
 	  // now that we have the gnuplot script, run it
 	  std::ostringstream oss;
 	  oss << "gnuplot " << pre_script_fn << " " << script_filename << " " << post_script_fn;
 	  system( oss.str().c_str() );
-
+	  
 	  
 	  // ok, now copy the resulting svg (temp.svg) into the output stream
 	  std::ifstream fin( output_name.c_str() );
 	  std::copy( std::istreambuf_iterator<char>(fin),
 		     std::istreambuf_iterator<char>(),
 		     std::ostreambuf_iterator<char>(out) );
-
+	  
 	  // remove all temporary files used
-	  if( plot_doc.get( "config.interactive", false ) == false ) {
+	  if( plot_doc.get( "config.interactive", false ) == false &&
+	      plot_doc.get( "config.keep_gnuplot_files", false ) == false ) {
 	    for( std::string fn : temp_filenames ) {
 	      remove( fn.c_str() );
 	    }

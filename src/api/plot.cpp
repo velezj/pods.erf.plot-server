@@ -18,13 +18,17 @@ namespace plot_server {
     string
     add_data_series( const vector<data_point_t>& data ,
 		     const ptree& series_config,
-		     const boost::optional<std::string> wanted_id )
+		     const boost::optional<std::string>& title,
+		     const boost::optional<std::string>& wanted_id )
     {
       ptree doc;
       for( auto dpoint : data ) {
 	doc.add_child( "data_series.data.", dpoint.attributes );
       }
       doc.put_child( "config", series_config );
+      if( title ) {
+	doc.put( "config.title", *title );
+      }
       std::ostringstream oss;
       oss << boost::chrono::system_clock::now();
       doc.put( "created" , oss.str() );
@@ -76,10 +80,14 @@ namespace plot_server {
     string
     create_plot( const ptree& plot_config,
 		 const vector<string>& data_series,
-		 const boost::optional<std::string> wanted_id )
+		 const boost::optional<std::string>& title,
+		 const boost::optional<std::string>& wanted_id )
     {
       ptree plot_doc;
       plot_doc.put_child( "config", plot_config );
+      if( title ) {
+	plot_doc.put( "config.title", *title );
+      }
       std::ostringstream oss;
       oss << boost::chrono::system_clock::now();
       plot_doc.put( "created" , oss.str() );
@@ -103,10 +111,14 @@ namespace plot_server {
     string
     create_plot_sequence( const ptree& sequence_config,
 			  const vector<string>& plots,
-			  const boost::optional<std::string> wanted_id )
+			  const boost::optional<std::string>& title,
+			  const boost::optional<std::string>& wanted_id )
     {
       ptree seq_doc;
       seq_doc.put_child( "config", sequence_config );
+      if( title ) {
+	seq_doc.put( "config.title", *title );
+      }
       std::ostringstream oss;
       oss << boost::chrono::system_clock::now();
       seq_doc.put( "created" , oss.str() );
