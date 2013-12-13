@@ -32,9 +32,11 @@ pods_install_pkg_config_file(plot-server-api-internal
 
 add_library( plot-server-api SHARED
   src/api/plot.cpp
+  src/api/common_plots.cpp
 )
 pods_install_headers(
   src/api/plot.hpp
+  src/api/common_plots.hpp
   DESTINATION
   plot-server/api
 )

@@ -223,6 +223,8 @@ namespace plot_server {
 			     script_fout,
 			     temp_filenames );
 
+	  std::cout << "GNUPLOT script: " << script_filename << std::endl;
+
 	  // now that we have the gnuplot script, run it
 	  std::ostringstream oss;
 	  oss << "gnuplot " << script_filename;
@@ -236,8 +238,10 @@ namespace plot_server {
 		     std::ostreambuf_iterator<char>(out) );
 
 	  // remove all temporary files used
-	  for( std::string fn : temp_filenames ) {
-	    remove( fn.c_str() );
+	  if( plot_doc.get( "config.interactive", false ) == false ) {
+	    for( std::string fn : temp_filenames ) {
+	      remove( fn.c_str() );
+	    }
 	  }
 	  
 	}
@@ -287,7 +291,7 @@ namespace plot_server {
       
       // Ok, now we have to plot each series using gnuplot
       // or the wanted backend
-      std::string backend = plot_doc.get( "plot_backend", "gnuplot" );
+      std::string backend = plot_doc.get( "config.backend", "gnuplot" );
       
       if( backend == "svg" ) {
 	backends::svg::plot( plot_doc, series, min_point, max_point, out );
