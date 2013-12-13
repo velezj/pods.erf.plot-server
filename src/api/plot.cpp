@@ -1,5 +1,6 @@
 
 #include "plot.hpp"
+#include "internal.hpp"
 #include <boost/chrono.hpp>
 #include <sstream>
 
@@ -11,56 +12,7 @@ using namespace std;
 namespace plot_server {
   namespace api {
 
-
-    namespace internal {
-
-      //=============================================================
-
-      static Couchdb _global_couchdb( boost::network::uri::uri("http://localhost:5984/plots-database/") );
-      
-      //=============================================================
-      
-      void open_globaldb( const boost::network::uri::uri& url )
-      {
-	_global_couchdb = Couchdb( url );
-      }
-
-      //=============================================================
-
-      Couchdb& globaldb()
-      {
-	return _global_couchdb;
-      }
-
-      //=============================================================
-
-      ptree
-      fetch_plot( const string& id ) 
-      {
-	return globaldb().fetch( id );
-      }
-      
-      //=============================================================
-
-      ptree
-      fetch_plot_sequence( const string& id )
-      {
-	return globaldb().fetch( id );
-      }
-      
-      //=============================================================
-
-      ptree
-      fetch_data_series( const string& id )
-      {
-	return globaldb().fetch( id );
-      }
-      
-      //=============================================================
-      
-
-    }
-
+    
     //=============================================================
 
     string

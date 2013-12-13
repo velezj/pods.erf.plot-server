@@ -1,6 +1,7 @@
 
 #include <mongoose/mongoose.h>
 #include <plot-server/api/plot.hpp>
+#include <plot-server/api/internal/internal.hpp>
 #include <plot-server/plotter/plotter.hpp>
 #include <fstream>
 #include <sstream>

@@ -1,6 +1,7 @@
 
 #include "plotter.hpp"
 #include <plot-server/api/plot.hpp>
+#include <plot-server/api/internal/internal.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <fstream>
 #include <cstdlib>

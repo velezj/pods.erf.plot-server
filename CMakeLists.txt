@@ -13,6 +13,23 @@ if( USE_PEDANTIC )
 endif (USE_PEDANTIC)
 
 
+add_library( plot-server-api-internal SHARED
+  src/api/internal.cpp
+)
+pods_install_headers(
+  src/api/internal.hpp
+  DESTINATION
+  plot-server/api/internal
+)
+pods_use_pkg_config_packages(plot-server-api-internal boost-1.54.0 erf-couchdb )
+pods_install_libraries( plot-server-api-internal )
+pods_install_pkg_config_file(plot-server-api-internal
+    CFLAGS
+    LIBS -lplot-server-api-internal
+    REQUIRES boost-1.54.0 erf-couchdb
+    VERSION 0.0.1)
+
+
 add_library( plot-server-api SHARED
   src/api/plot.cpp
 )
@@ -21,12 +38,12 @@ pods_install_headers(
   DESTINATION
   plot-server/api
 )
-pods_use_pkg_config_packages(plot-server-api boost-1.54.0 erf-couchdb)
+pods_use_pkg_config_packages(plot-server-api plot-server-api-internal)
 pods_install_libraries( plot-server-api )
 pods_install_pkg_config_file(plot-server-api
     CFLAGS
     LIBS -lplot-server-api
-    REQUIRES boost-1.54.0 erf-couchdb
+    REQUIRES plot-server-api-internal
     VERSION 0.0.1)
 
 

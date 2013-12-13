@@ -129,42 +129,6 @@ namespace plot_server {
 
     //===============================================================
 
-
-
-    // Description:
-    // Internal API
-    namespace internal {
-
-
-      //===============================================================
-
-      // Description:
-      // returns the global databse isntance (couchdb)
-      couchdb::Couchdb& globaldb();
-
-      //===============================================================
-      
-      // Description:
-      // Returns the entire structure for a plot given it's id
-      boost::property_tree::ptree
-      fetch_plot( const std::string& id );
-      
-      //===============================================================
-      
-      // Description:
-      // Returns the enture strucgure for a plot sequence given it's id
-      boost::property_tree::ptree
-      fetch_plot_sequence( const std::string& id );
-      
-      //===============================================================
-      
-      // Description:
-      // Returns the entire structure for a data series given it's id
-      boost::property_tree::ptree
-      fetch_data_series( const std::string& id );
-
-    }
-
     //===============================================================
     //===============================================================
     //===============================================================
