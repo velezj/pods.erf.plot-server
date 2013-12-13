@@ -47,8 +47,20 @@ int main( int argc, char** argv )
   std::string seq_1 = create_plot_sequence( ptree(), seq_1_plots );
 
   // create a histogram of the data
-  std::string hist_1_ds = create_histogram_data_series( { series_1_id, series_2_id } );
+  std::string hist_1_ds = 
+    create_histogram_data_series( { series_1_id, series_2_id } );
   std::string hist_1 = create_histogram_plot( hist_1_ds );
+
+  // create boxplot of the data
+  std::string boxplot_1_ds = 
+    create_quantile_data_series( { series_1_id, series_2_id } );
+  std::string boxplot_1 = create_box_plot( { series_1_id },
+					   "y", "x", "z" );
+    
+
+  // with the two series
+  std::string comp_1 = create_plot( ptree(), plot_2_series );
+  add_plot_to_plot( plot_1, comp_1 );
   
   return 0;
 }

@@ -18,6 +18,7 @@ namespace plot_server {
     std::string
     create_histogram_data_series
     ( const std::vector<std::string>& source_series_ids,
+      const std::string& dimension = "x",
       const size_t& num_bins = 100,
       boost::optional<std::string> wanted_id = boost::optional<std::string>());
 
@@ -32,6 +33,7 @@ namespace plot_server {
     std::string
     create_quantile_data_series
     ( const std::vector<std::string>& source_series_ids,
+      const std::string& dimension = "x",
       const std::vector<double>& quantiles = std::vector<double>({0.0,.25,.75, 1.0}),
       boost::optional<std::string> wanted_id = boost::optional<std::string>());
       
@@ -53,7 +55,11 @@ namespace plot_server {
     // Returns the id of the new plot.
     std::string
     create_box_plot
-    ( const std::string& data_series,
+    ( const std::vector<std::string>& source_series_ids,
+      const std::string& coordinate = "x",
+      const std::string& dimension = "y",
+      const std::string& factor = "x",
+      const std::string& width = "width",
       boost::optional<std::string> wanted_id = boost::optional<std::string>());
     
     //================================================================

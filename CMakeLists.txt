@@ -37,6 +37,7 @@ add_library( plot-server-api SHARED
 pods_install_headers(
   src/api/plot.hpp
   src/api/common_plots.hpp
+  src/api/ranker.hpp
   DESTINATION
   plot-server/api
 )

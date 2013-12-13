@@ -115,9 +115,7 @@ namespace plot_server {
 	      wanted_attributes.push_back( atts.second.data() );
 	    }
 	  } else {
-	    wanted_attributes.push_back( "x" );
-	    wanted_attributes.push_back( "y" );
-	    wanted_attributes.push_back( "z" );
+	    wanted_attributes = { "x", "y", "z" };
 	  }
 	  
 	  // ok, we will create a temporary data file with the
@@ -137,9 +135,13 @@ namespace plot_server {
 	  ftemp.close();
 
 	  // get the configuration for the gnuplot
+	  std::string title 
+	    = plot_doc.get( "config.title",
+			    plot_doc.get( "_id", "plot" ) );
 	  std::string terminal 
 	    = plot_doc.get( "config.terminal",
-			    "svg size 400,400 mouse standalone enhanced" );
+			    /*"svg size 400,400 mouse standalone enhanced"*/
+			    "svg size 400,400 standalone" );
 
 	  std::string plot_prefix
 	    = plot_doc.get( "config.plot_prefix",
@@ -164,12 +166,12 @@ namespace plot_server {
 	  if( replot == false ) {
 	    out << "set terminal " << terminal << std::endl;
 	    out << "set output \"" << output_name << "\"" << std::endl;
-	    out << plot_prefix << " \"" << data_filename << "\" " << plot_postfix << std::endl;
+	    out << plot_prefix << " \"" << data_filename << "\" title \"" << title<< "\" "  << plot_postfix << std::endl;
 	  } else {
-	    out << "re" << plot_prefix << " \"" << data_filename << "\" " << plot_postfix << std::endl;
+	    out << "replot" << " \"" << data_filename << "\" " << " title \"" << title<< "\" "  << plot_postfix << std::endl;
 	  }
 	  out << extra_gnuplot_commands << std::endl;
-	  out << "# end of plot " << plot_doc.get("id","unk") << std::endl;
+	  out << "# end of plot " << plot_doc.get("_id","unk") << std::endl;
 	  out << std::endl;
 
 	  
@@ -222,6 +224,9 @@ namespace plot_server {
 			     output_name,
 			     script_fout,
 			     temp_filenames );
+
+	  // append a last "set output" to script
+	  script_fout << std::endl << "set output" << std::endl;
 
 	  std::cout << "GNUPLOT script: " << script_filename << std::endl;
 
