@@ -5,6 +5,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <fstream>
 #include <cstdlib>
+#include <cstdio>
 
 using namespace plot_server::api;
 using namespace boost::property_tree;
@@ -99,14 +100,14 @@ namespace plot_server {
       //================================================================
 
       namespace gnuplot {
-	
-	void plot( const ptree& plot_doc,
-		   const std::vector<ptree>& series,
-		   const data_point_t& min_point,
-		   const data_point_t& max_point,
-		   std::ostream& out )
-	{
 
+	void write_plot_script( const bool& replot,
+				const ptree& plot_doc,
+				const std::vector<ptree>& series,
+				const std::string& output_name,
+				std::ostream& out,
+				std::vector<std::string>& temp_filenames )
+	{
 	  // get the wanted columns of data_points for gnuplot
 	  std::vector<std::string> wanted_attributes;
 	  if( plot_doc.get_child_optional( "config.wanted_attributes" ) ) {
@@ -118,10 +119,12 @@ namespace plot_server {
 	    wanted_attributes.push_back( "y" );
 	    wanted_attributes.push_back( "z" );
 	  }
-
+	  
 	  // ok, we will create a temporary data file with the
 	  // series
-	  std::ofstream ftemp( "temp.dat" );
+	  std::string data_filename = tmpnam( NULL );
+	  temp_filenames.push_back( data_filename );
+	  std::ofstream ftemp( data_filename.c_str() );
 	  for( ptree s : series ) {
 	    for( ptree::value_type data_doc : s.get_child( "data_series.data" ) ) {
 	      data_point_t d = data_point_t( data_doc.second );
@@ -152,30 +155,91 @@ namespace plot_server {
 	  // the options and create a nice pause script
 	  bool interactive = plot_doc.get( "config.interactive", false );
 	  if( interactive ) {
-	    std::ofstream pause_script_fout("pause.cfg");
-	    pause_script_fout << "pause -1" << std::endl;
-	    pause_script_fout.close();
-	    //extra_gnuplot_commands += " pause.cfg";
 	    terminal = "wxt persist";
 	  }
 	  
-	  std::ostringstream oss;
-	  oss << "gnuplot" << " -e 'set terminal " << terminal << "' ";
-	  oss << "-e 'set output \"temp.svg\"' ";
-	  oss << "-e '" << plot_prefix << " \"temp.dat\" " << plot_postfix << "'";
-	  oss << extra_gnuplot_commands;
 
-	  // create gnuplot command line to plot the given
+	  out << "# start of plot " << plot_doc.get("id","unk") << std::endl;
+	  // write out the gnuplot script
+	  if( replot == false ) {
+	    out << "set terminal " << terminal << std::endl;
+	    out << "set output \"" << output_name << "\"" << std::endl;
+	    out << plot_prefix << " \"" << data_filename << "\" " << plot_postfix << std::endl;
+	  } else {
+	    out << "re" << plot_prefix << " \"" << data_filename << "\" " << plot_postfix << std::endl;
+	  }
+	  out << extra_gnuplot_commands << std::endl;
+	  out << "# end of plot " << plot_doc.get("id","unk") << std::endl;
+	  out << std::endl;
+
+	  
+	  // now go through any composite plots
+	  if( plot_doc.get_child_optional( "plot.composite_plots" ) ) {
+	    for(ptree::value_type pc : plot_doc.get_child( "plot.composite_plots") ) {
+
+	      // get the composite plot_doc and it's series
+	      ptree composite_doc = internal::fetch_plot( pc.second.data() );
+	      std::vector<ptree> composite_series;
+	      for( ptree::value_type psc : composite_doc.get_child( "plot.data_series" ) ) {
+		composite_series.push_back( internal::fetch_data_series( psc.second.data() ) );
+	      }
+
+	      // ok, now append it's script as a "replot"
+	      write_plot_script( true,
+				 composite_doc,
+				 composite_series,
+				 output_name,
+				 out,
+				 temp_filenames );
+	      
+	    }
+	  }
+	}
+
+	
+	void plot( const ptree& plot_doc,
+		   const std::vector<ptree>& series,
+		   const data_point_t& min_point,
+		   const data_point_t& max_point,
+		   std::ostream& out )
+	{
+
+	  // ok, create a temporary filename to creat the gnuplot script
+	  std::vector<std::string> temp_filenames;
+	  std::string script_filename = tmpnam( NULL );
+	  temp_filenames.push_back( script_filename );
+	  std::ofstream script_fout( script_filename.c_str() );
+
+	  // create a temporary file for the gnuplot output
+	  std::string output_name = tmpnam( NULL );
+	  temp_filenames.push_back( output_name );
+
+	  // now, go through the first plot, and then every composite plot
+	  // and write out their script to the script file
+	  write_plot_script( false,
+			     plot_doc,
+			     series,
+			     output_name,
+			     script_fout,
+			     temp_filenames );
+
+	  // now that we have the gnuplot script, run it
+	  std::ostringstream oss;
+	  oss << "gnuplot " << script_filename;
 	  system( oss.str().c_str() );
 
+	  
 	  // ok, now copy the resulting svg (temp.svg) into the output stream
-	  if( !interactive ) {
-	    std::ifstream fin( "temp.svg" );
-	    std::copy( std::istreambuf_iterator<char>(fin),
-		       std::istreambuf_iterator<char>(),
-		       std::ostreambuf_iterator<char>(out) );
-	  }
+	  std::ifstream fin( output_name.c_str() );
+	  std::copy( std::istreambuf_iterator<char>(fin),
+		     std::istreambuf_iterator<char>(),
+		     std::ostreambuf_iterator<char>(out) );
 
+	  // remove all temporary files used
+	  for( std::string fn : temp_filenames ) {
+	    remove( fn.c_str() );
+	  }
+	  
 	}
       }
 
@@ -233,19 +297,6 @@ namespace plot_server {
 	backends::threejs::plot( plot_doc, series, min_point, max_point, out );
       }
       
-      // // ACTULALLY: just print out the bounding box and the data points
-      // out << "BOUNDS: ";
-      // json_parser::write_json( out, min_point.attributes );
-      // out << " , ";
-      // json_parser::write_json( out, max_point.attributes );
-      // out << std::endl;
-      // for( auto node : series ) {
-      // 	for( auto d : node.get_child( "data_series.data" ) ) {
-      // 	  out << "dp: ";
-      // 	  json_parser::write_json( out, d.second );
-      // 	  out << std::endl;
-      // 	}
-      // }
     }
 
     //================================================================

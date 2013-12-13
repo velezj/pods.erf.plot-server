@@ -49,6 +49,17 @@ namespace plot_server {
       ptree res = internal::globaldb().save( plot_doc, plot_id );
     }
 
+    //=============================================================
+
+    void add_plot_to_plot( const string& source_plot_id,
+			   const string& target_plot_id )
+    {
+      ptree plot_doc = internal::fetch_plot( target_plot_id );
+      plot_doc.add( "plot.composite_plots.", source_plot_id );
+      ptree res = internal::globaldb().save( plot_doc, target_plot_id );
+    }
+
+
 
     //=============================================================
 

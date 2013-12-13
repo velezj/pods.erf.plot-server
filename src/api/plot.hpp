@@ -91,6 +91,15 @@ namespace plot_server {
     //===============================================================
 
     // Description:
+    // add a plot to a plot, thereby creating composite plots
+    void add_plot_to_plot( const std::string& source_plot_id,
+			   const std::string& target_plot_id );
+
+
+
+    //===============================================================
+
+    // Description:
     // Creates a new plot sequence and return it's ID
     // Also adds the given plots to the sequence in order
     std::string
