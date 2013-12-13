@@ -6,6 +6,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
+#include <erf-couchdb/couchdb.hpp>
 #include <string>
 #include <vector>
 #include <map>
@@ -134,6 +135,14 @@ namespace plot_server {
     // Internal API
     namespace internal {
 
+
+      //===============================================================
+
+      // Description:
+      // returns the global databse isntance (couchdb)
+      couchdb::Couchdb& globaldb();
+
+      //===============================================================
       
       // Description:
       // Returns the entire structure for a plot given it's id

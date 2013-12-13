@@ -1,6 +1,5 @@
 
 #include "plot.hpp"
-#include <erf-couchdb/couchdb.hpp>
 #include <boost/chrono.hpp>
 #include <sstream>
 

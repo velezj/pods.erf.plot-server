@@ -7,6 +7,7 @@
 #include <iostream>
 #include <boost/chrono.hpp>
 #include <ctime>
+#include <cstring>
 
 static int handle_plot_uri_test( struct mg_connection *conn )
 {
@@ -27,7 +28,8 @@ static int handle_plot_listing( struct mg_connection* conn )
   oss << "<ol>" << std::endl;
   for( std::string id : plot_ids ) {
     boost::property_tree::ptree plot_doc = plot_server::api::internal::fetch_plot( id );
-    oss << "<li>  <a href=\"plot?" << id << "\">" << id << "</a>";
+    oss << "<li>  <a href=\"plot?plot_id=" << id << "\">" << id << "</a>";
+    oss << "  (<a href=\"plot?plot_id=" << id << "&interactive=true\">interactive</a>) ";
     
     if( plot_doc.get("created", "") != "" ) {
       boost::chrono::system_clock::time_point tp;
@@ -59,11 +61,24 @@ static int handle_plot_listing( struct mg_connection* conn )
 
 
 static int handle_plot_serve( const std::string& plot_id,
+			      const bool interactive,
 			      struct mg_connection* conn )
 {
   std::ostringstream oss;
   oss << "HTTP/1.0 200 OK\r\n\r\n";
+  std::vector<std::pair<std::string,std::string> > add_int;
+  if( interactive ) {
+    add_int.push_back( std::make_pair( "config.interactive", "true" ) );
+    plot_server::api::internal::globaldb().try_update( plot_id, add_int );
+  } else {
+    add_int.push_back( std::make_pair( "config.interactive", "false" ) );
+    plot_server::api::internal::globaldb().try_update( plot_id, add_int );
+  }
   plot_server::plotter::plot( plot_id, oss );
+  if( interactive ) {
+    oss.str("");
+    oss << "HTTP/1.0 302 Found\r\nLocation: localhost:8888/plot\r\n";
+  }
   mg_write( conn, oss.str().c_str(), oss.str().size() );
   return 1;
 }
@@ -83,9 +98,18 @@ static int handle_plot_uri( struct mg_connection* conn )
     return handle_plot_listing( conn );
   } 
 
+  char plot_id[256];
+  char temp_buff[16];
+  bool interactive = false;
+  mg_get_var( conn, "plot_id", plot_id, 255 );
+  mg_get_var( conn, "interactive", temp_buff, 15 );
+  if( strncmp( temp_buff, "true", 15 ) == 0 ) {
+    interactive = true;
+  }
+
   // ok, we have a uri beyond plot
   // so actually return a plot to the user
-  return handle_plot_serve( query_string, conn );
+  return handle_plot_serve( plot_id, interactive, conn );
 }
 
 

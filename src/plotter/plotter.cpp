@@ -154,8 +154,8 @@ namespace plot_server {
 	    std::ofstream pause_script_fout("pause.cfg");
 	    pause_script_fout << "pause -1" << std::endl;
 	    pause_script_fout.close();
-	    extra_gnuplot_commands += " pause.cfg";
-	    terminal = "wxt";
+	    //extra_gnuplot_commands += " pause.cfg";
+	    terminal = "wxt persist";
 	  }
 	  
 	  std::ostringstream oss;
