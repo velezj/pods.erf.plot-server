@@ -105,7 +105,9 @@ namespace plot_server {
 				const ptree& plot_doc,
 				const std::vector<ptree>& series,
 				const std::string& output_name,
-				std::ostream& out,
+				std::ostream& pre_out,
+				std::ostream& plot_out,
+				std::ostream& post_out,
 				std::vector<std::string>& temp_filenames )
 	{
 	  // get the wanted columns of data_points for gnuplot
@@ -149,8 +151,11 @@ namespace plot_server {
 	  std::string plot_postfix
 	    = plot_doc.get( "config.plot_postfix",
 			    "" );
+	  std::string pre_gnuplot_commands
+	    = plot_doc.get( "config.pre_gnuplot_commands",
+			    "" );
 	  std::string extra_gnuplot_commands
-	    = plot_doc.get( "config.extra_gnuplot_commands",
+	    = plot_doc.get( "config.post_gnuplot_commands",
 			    "" );
 
 	  // see if we want an "interactive" plot and if so reset some of
@@ -161,18 +166,22 @@ namespace plot_server {
 	  }
 	  
 
-	  out << "# start of plot " << plot_doc.get("id","unk") << std::endl;
+	  pre_out << "# start of plot " << plot_doc.get("id","unk") << std::endl;
+	  post_out << "# start of plot " << plot_doc.get("id","unk") << std::endl;
 	  // write out the gnuplot script
 	  if( replot == false ) {
-	    out << "set terminal " << terminal << std::endl;
-	    out << "set output \"" << output_name << "\"" << std::endl;
-	    out << plot_prefix << " \"" << data_filename << "\" title \"" << title<< "\" "  << plot_postfix << std::endl;
+	    pre_out << "set terminal " << terminal << std::endl;
+	    pre_out << "set output \"" << output_name << "\"" << std::endl;
+	    plot_out << plot_prefix << " \"" << data_filename << "\" title \"" << title<< "\" "  << plot_postfix;
 	  } else {
-	    out << "replot" << " \"" << data_filename << "\" " << " title \"" << title<< "\" "  << plot_postfix << std::endl;
+	    plot_out << ", \"" << data_filename << "\" " << " title \"" << title<< "\" "  << plot_postfix;
 	  }
-	  out << extra_gnuplot_commands << std::endl;
-	  out << "# end of plot " << plot_doc.get("_id","unk") << std::endl;
-	  out << std::endl;
+	  pre_out << pre_gnuplot_commands << std::endl;
+	  post_out << extra_gnuplot_commands << std::endl;
+	  pre_out << "# end of plot " << plot_doc.get("_id","unk") << std::endl;
+	  post_out << "# end of plot " << plot_doc.get("_id","unk") << std::endl;
+	  pre_out << std::endl;
+	  post_out << std::endl;
 
 	  
 	  // now go through any composite plots
@@ -191,7 +200,9 @@ namespace plot_server {
 				 composite_doc,
 				 composite_series,
 				 output_name,
-				 out,
+				 pre_out,
+				 plot_out,
+				 post_out,
 				 temp_filenames );
 	      
 	    }
@@ -212,6 +223,14 @@ namespace plot_server {
 	  temp_filenames.push_back( script_filename );
 	  std::ofstream script_fout( script_filename.c_str() );
 
+	  // create temporary files for pre and post scripts
+	  std::string pre_script_fn = tmpnam( NULL );
+	  std::string post_script_fn = tmpnam( NULL );
+	  temp_filenames.push_back( pre_script_fn );
+	  temp_filenames.push_back( post_script_fn );
+	  std::ofstream pre_script_fout( pre_script_fn.c_str() );
+	  std::ofstream post_script_fout( post_script_fn.c_str() );
+
 	  // create a temporary file for the gnuplot output
 	  std::string output_name = tmpnam( NULL );
 	  temp_filenames.push_back( output_name );
@@ -222,17 +241,25 @@ namespace plot_server {
 			     plot_doc,
 			     series,
 			     output_name,
+			     pre_script_fout,
 			     script_fout,
+			     post_script_fout,
 			     temp_filenames );
 
-	  // append a last "set output" to script
-	  script_fout << std::endl << "set output" << std::endl;
+	  // terminate newline for plot file
+	  script_fout << std::endl;
 
-	  std::cout << "GNUPLOT script: " << script_filename << std::endl;
+	  // append a last "set output" to script
+	  post_script_fout << std::endl << "set output" << std::endl;
+
+	  std::cout << "GNUPLOT script: " 
+		    << pre_script_fn << " " 
+		    << script_filename << " "
+		    << post_script_fn << std::endl;
 
 	  // now that we have the gnuplot script, run it
 	  std::ostringstream oss;
-	  oss << "gnuplot " << script_filename;
+	  oss << "gnuplot " << pre_script_fn << " " << script_filename << " " << post_script_fn;
 	  system( oss.str().c_str() );
 
 	  
