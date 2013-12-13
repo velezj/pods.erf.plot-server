@@ -146,6 +146,17 @@ namespace plot_server {
 	  std::string extra_gnuplot_commands
 	    = plot_doc.get( "config.extra_gnuplot_commands",
 			    "" );
+
+	  // see if we want an "interactive" plot and if so reset some of
+	  // the options and create a nice pause script
+	  bool interactive = plot_doc.get( "config.interactive", false );
+	  if( interactive ) {
+	    std::ofstream pause_script_fout("pause.cfg");
+	    pause_script_fout << "pause -1" << std::endl;
+	    pause_script_fout.close();
+	    extra_gnuplot_commands += " pause.cfg";
+	    terminal = "wxt";
+	  }
 	  
 	  std::ostringstream oss;
 	  oss << "gnuplot" << " -e 'set terminal " << terminal << "' ";
@@ -157,10 +168,12 @@ namespace plot_server {
 	  system( oss.str().c_str() );
 
 	  // ok, now copy the resulting svg (temp.svg) into the output stream
-	  std::ifstream fin( "temp.svg" );
-	  std::copy( std::istreambuf_iterator<char>(fin),
-		     std::istreambuf_iterator<char>(),
-		     std::ostreambuf_iterator<char>(out) );
+	  if( !interactive ) {
+	    std::ifstream fin( "temp.svg" );
+	    std::copy( std::istreambuf_iterator<char>(fin),
+		       std::istreambuf_iterator<char>(),
+		       std::ostreambuf_iterator<char>(out) );
+	  }
 
 	}
       }
