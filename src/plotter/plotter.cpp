@@ -154,7 +154,7 @@ namespace plot_server {
 	  std::string terminal 
 	    = plot_doc.get( "config.terminal",
 			    /*"svg size 400,400 mouse standalone enhanced"*/
-			    "svg size 400,400 standalone" );
+			    "svg size 400,400 dynamic standalone" );
 
 	  std::string plot_prefix
 	    = plot_doc.get( "config.plot_prefix",
@@ -277,9 +277,40 @@ namespace plot_server {
 	  
 	  // ok, now copy the resulting svg (temp.svg) into the output stream
 	  std::ifstream fin( output_name.c_str() );
-	  std::copy( std::istreambuf_iterator<char>(fin),
-		     std::istreambuf_iterator<char>(),
-		     std::ostreambuf_iterator<char>(out) );
+
+	  // we want to add a special group to add teh SVGPan.js code
+	  bool looking_for_end_svg = false;
+	  bool looking_for_desc = true;
+	  bool looking_for_viewbox = true;
+	  while( fin ) {
+	    std::string line;
+	    std::getline( fin, line );
+	    if( looking_for_viewbox &&
+		line.substr( 0, 9 ) == " viewBox=" ) {
+	      // remove this line from the svg
+	      looking_for_viewbox = false;
+	      looking_for_desc = true;
+	    } else if( looking_for_desc && line.substr(0, 6 ) == "<desc>" ) {
+	      // ok, add the line and then add our script and g tags
+	      out << line << std::endl;
+	      out << "<script xlink:href=\"SVGPan.js\"/>" << std::endl;
+	      out << "<g id=\"viewport\" transform=\"translate(200,200)\">" << std::endl;
+	      looking_for_desc = false;
+	      looking_for_end_svg = true;
+	    } else if( looking_for_end_svg &&
+		       line.substr( 0, 6 ) == "</svg>" ) {
+	      // close our new group
+	      out << "</g>" << std::endl;
+	      out << line << std::endl;
+	      looking_for_end_svg = false;
+	    } else {
+	      out << line << std::endl;
+	    }
+	  }
+	  
+	  // std::copy( std::istreambuf_iterator<char>(fin),
+	  // 	     std::istreambuf_iterator<char>(),
+	  // 	     std::ostreambuf_iterator<char>(out) );
 	  
 	  // remove all temporary files used
 	  if( plot_doc.get( "config.interactive", false ) == false &&

@@ -65,6 +65,8 @@ pods_install_pkg_config_file(plot-server-plotter
     LIBS -lplot-server-plotter
     REQUIRES plot-server-api
     VERSION 0.0.1)
+INSTALL(FILES src/server/js/SVGPan.js 
+  DESTINATION bin )
 
 
 add_executable( plot-server-server
