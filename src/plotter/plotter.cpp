@@ -101,6 +101,53 @@ namespace plot_server {
 
       namespace gnuplot {
 
+	std::string
+	build_gnuplot_plot_options( const ptree& plot_doc ) 
+	{
+	  std::ostringstream oss;
+	  
+	  
+	  // get the plot style
+	  oss << " with " << plot_doc.get( "config.gnuplot.style", "linespoints" ) << " ";
+
+	  // get plot style options
+	  if( plot_doc.get_optional<std::string>( "config.gnuplot.linestyle" ) ) {
+	    oss << " linestyle " << plot_doc.get( "config.gnuplot.linestyle", "" ) << " ";
+	  }
+	  if( plot_doc.get_optional<std::string>( "config.gnuplot.linetype" ) ) {
+	    oss << " linetype " << plot_doc.get( "config.gnuplot.linetype", "" ) << " ";
+	  }
+	  if( plot_doc.get_optional<std::string>( "config.gnuplot.linewidth" ) ) {
+	    oss << " linewidth " << plot_doc.get( "config.gnuplot.linewidth", "" ) << " ";
+	  }
+	  if( plot_doc.get_optional<std::string>( "config.gnuplot.linecolor" ) ) {
+	    oss << " linecolor " << plot_doc.get( "config.gnuplot.linecolor", "" ) << " ";
+	  }
+	  if( plot_doc.get_optional<std::string>( "config.gnuplot.pointtype" ) ) {
+	    oss << " pointtype " << plot_doc.get( "config.gnuplot.pointtype", "" ) << " ";
+	  }
+	  if( plot_doc.get_optional<std::string>( "config.gnuplot.pointsize" ) ) {
+	    oss << " pointsize " << plot_doc.get( "config.gnuplot.pointsize", "" ) << " ";
+	  }
+	  if( plot_doc.get_optional<std::string>( "config.gnuplot.fill" ) ) {
+	    oss << " fill " << plot_doc.get( "config.gnuplot.fill", "" ) << " ";
+	  }
+	  if( plot_doc.get_optional<std::string>( "config.gnuplot.nohidden3d" )) {
+	    oss << " nohidden3d ";
+	  }
+	  if( plot_doc.get_optional<std::string>( "config.gnuplot.nocountours" ) ) {
+	    oss << " nocountours ";
+	  }
+	  if( plot_doc.get_optional<std::string>( "config.gnuplot.nosurface" ) ) {
+	    oss << " nosurface ";
+	  }
+	  if( plot_doc.get_optional<std::string>( "config.gnuplot.palette" ) ) {
+	    oss << " palette ";
+	  }
+
+	  return oss.str();
+	}
+
 	void write_plot_script( const bool& replot,
 				const ptree& plot_doc,
 				const std::vector<ptree>& series,
@@ -169,6 +216,11 @@ namespace plot_server {
 	    = plot_doc.get( "config.post_gnuplot_commands",
 			    "" );
 
+	  // ok, build the gnuplot plot command options given the
+	  // config node of the plot_doc
+	  std::string plot_options 
+	    = build_gnuplot_plot_options( plot_doc );
+
 	  // see if we want an "interactive" plot and if so reset some of
 	  // the options and create a nice pause script
 	  bool interactive = plot_doc.get( "config.interactive", false );
@@ -177,16 +229,16 @@ namespace plot_server {
 	  }
 	  
 
-	  pre_out << "# start of plot " << plot_doc.get("id","unk") << std::endl;
-	  post_out << "# start of plot " << plot_doc.get("id","unk") << std::endl;
+	  pre_out << "# start of plot " << plot_doc.get("_id","unk") << std::endl;
+	  post_out << "# start of plot " << plot_doc.get("_id","unk") << std::endl;
 	  // write out the gnuplot script
 	  if( replot == false ) {
 	    pre_out << "set title \"" << title << "\"" << std::endl;
 	    pre_out << "set terminal " << terminal << std::endl;
 	    pre_out << "set output \"" << output_name << "\"" << std::endl;
-	    plot_out << plot_prefix << " \"" << data_filename << "\" title \"" << series_title << "\" "  << plot_postfix;
+	    plot_out << plot_prefix << " \"" << data_filename << "\" title \"" << series_title << "\" " << plot_options << " " << plot_postfix;
 	  } else {
-	    plot_out << ", \"" << data_filename << "\" " << " title \"" << series_title << "\" "  << plot_postfix;
+	    plot_out << ", \"" << data_filename << "\" " << " title \"" << series_title << "\" "  << plot_options << " " << plot_postfix;
 	  }
 	  pre_out << pre_gnuplot_commands << std::endl;
 	  post_out << extra_gnuplot_commands << std::endl;

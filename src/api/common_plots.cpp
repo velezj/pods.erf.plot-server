@@ -112,7 +112,7 @@ namespace plot_server {
       ptree config;
       config.put( "backend", "gnuplot" );
       config.put( "plot_prefix", "plot" );
-      config.put( "plot_postfix" , " with boxes" );
+      config.put( "gnuplot.style" , "boxes" );
       
       // create a new plot wit hthe given config and series
       return create_plot( config,
@@ -202,7 +202,7 @@ namespace plot_server {
       ptree config;
       config.put( "backend", "gnuplot" );
       config.put( "plot_prefix", "plot" );
-      config.put( "plot_postfix" , " with boxplot" );
+      config.put( "gnuplot.style" , "boxplot" );
 
       // make sure we get all hte compute quantials
       std::vector<std::string> atts = { coordinate, dimension, width, factor };
