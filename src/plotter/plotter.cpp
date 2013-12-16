@@ -102,6 +102,28 @@ namespace plot_server {
       namespace gnuplot {
 
 	std::string
+	build_gnuplot_range_options( const ptree& plot_doc ) 
+	{
+	  std::ostringstream oss;
+	  oss << "[" 
+	      << plot_doc.get( "config.range.x.min",
+			       "*" )
+	      << ":"
+	      << plot_doc.get( "config.range.x.max",
+			       "*" )
+	      << "] ";
+	  oss << "["
+	      << plot_doc.get( "config.range.y.min",
+			       "*" )
+	      << ":"
+	      << plot_doc.get( "config.range.y.max",
+			       "*" )
+	      << "] ";
+	  return oss.str();
+	}
+
+
+	std::string
 	build_gnuplot_plot_options( const ptree& plot_doc ) 
 	{
 	  std::ostringstream oss;
@@ -176,12 +198,15 @@ namespace plot_server {
 	  temp_filenames.push_back( data_filename );
 	  std::ofstream ftemp( data_filename.c_str() );
 	  for( ptree s : series ) {
-	    for( ptree::value_type data_doc : s.get_child( "data_series.data" ) ) {
+	    for( ptree::value_type data_doc : s.get_child( "data_series.data", ptree() ) ) {
 	      data_point_t d = data_point_t( data_doc.second );
 	      for( auto attr : wanted_attributes ) {
 		ftemp << d.get(attr, 0.0) << " ";
 	      }
 	      ftemp << std::endl;
+	    }
+	    if( plot_doc.get( "config.contiguous_series", false ) == false ) {
+	      ftemp << std::endl; // add extra line between series
 	    }
 	    if( s_title_oss.str().size() > 0 ) {
 	      s_title_oss << " & ";
@@ -198,10 +223,17 @@ namespace plot_server {
 	  std::string series_title 
 	    = plot_doc.get( "config.series_title",
 			    s_title_oss.str() );
+	  
+	  size_t plot_width
+	    = plot_doc.get( "config.width", 700 );
+	  size_t plot_height
+	    = plot_doc.get( "config.height", 700 );
+	  std::ostringstream term_oss;
+	  term_oss << "svg size " << plot_width << "," << plot_height << " dynamic mouse standalone enhanced";
+	  
 	  std::string terminal 
 	    = plot_doc.get( "config.terminal",
-			    /*"svg size 400,400 mouse standalone enhanced"*/
-			    "svg size 400,400 dynamic standalone" );
+			    term_oss.str() );
 
 	  std::string plot_prefix
 	    = plot_doc.get( "config.plot_prefix",
@@ -221,6 +253,10 @@ namespace plot_server {
 	  std::string plot_options 
 	    = build_gnuplot_plot_options( plot_doc );
 
+	  // build any range information wanted
+	  std::string range_options
+	    = build_gnuplot_range_options( plot_doc );
+
 	  // see if we want an "interactive" plot and if so reset some of
 	  // the options and create a nice pause script
 	  bool interactive = plot_doc.get( "config.interactive", false );
@@ -236,9 +272,9 @@ namespace plot_server {
 	    pre_out << "set title \"" << title << "\"" << std::endl;
 	    pre_out << "set terminal " << terminal << std::endl;
 	    pre_out << "set output \"" << output_name << "\"" << std::endl;
-	    plot_out << plot_prefix << " \"" << data_filename << "\" title \"" << series_title << "\" " << plot_options << " " << plot_postfix;
+	    plot_out << plot_prefix << " " << range_options << " \"" << data_filename << "\" title \"" << series_title << "\" " << plot_options << " " << plot_postfix;
 	  } else {
-	    plot_out << ", \"" << data_filename << "\" " << " title \"" << series_title << "\" "  << plot_options << " " << plot_postfix;
+	    plot_out << ", " << range_options << " \"" << data_filename << "\" " << " title \"" << series_title << "\" "  << plot_options << " " << plot_postfix;
 	  }
 	  pre_out << pre_gnuplot_commands << std::endl;
 	  post_out << extra_gnuplot_commands << std::endl;
