@@ -3,6 +3,7 @@
 #include <plot-server/api/plot.hpp>
 #include <plot-server/api/internal/internal.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/lexical_cast.hpp>
 #include <fstream>
 #include <cstdlib>
 #include <cstdio>
@@ -202,7 +203,12 @@ namespace plot_server {
 	      data_point_t d = data_point_t( data_doc.second );
 	      if( !d.get( "skip", false ) ) {
 		for( auto attr : wanted_attributes ) {
-		  ftemp << d.get(attr, 0.0) << " ";
+		  try {
+		    double constant = boost::lexical_cast<double>( attr );
+		    ftemp << constant << " ";
+		  } catch ( boost::bad_lexical_cast& e ) {
+		    ftemp << d.get(attr, 0.0) << " ";
+		  }
 		}
 	      }
 	      ftemp << std::endl;
