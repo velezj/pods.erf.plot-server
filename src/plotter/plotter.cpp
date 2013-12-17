@@ -200,8 +200,10 @@ namespace plot_server {
 	  for( ptree s : series ) {
 	    for( ptree::value_type data_doc : s.get_child( "data_series.data", ptree() ) ) {
 	      data_point_t d = data_point_t( data_doc.second );
-	      for( auto attr : wanted_attributes ) {
-		ftemp << d.get(attr, 0.0) << " ";
+	      if( !d.get( "skip", false ) ) {
+		for( auto attr : wanted_attributes ) {
+		  ftemp << d.get(attr, 0.0) << " ";
+		}
 	      }
 	      ftemp << std::endl;
 	    }
@@ -269,12 +271,16 @@ namespace plot_server {
 	  post_out << "# start of plot " << plot_doc.get("_id","unk") << std::endl;
 	  // write out the gnuplot script
 	  if( replot == false ) {
+	    // if( plot_doc.get( "config.square", true ) ) {
+	    //   pre_out << "set size square 1,1" << std::endl;
+	    // }
 	    pre_out << "set title \"" << title << "\"" << std::endl;
 	    pre_out << "set terminal " << terminal << std::endl;
 	    pre_out << "set output \"" << output_name << "\"" << std::endl;
+	    
 	    plot_out << plot_prefix << " " << range_options << " \"" << data_filename << "\" title \"" << series_title << "\" " << plot_options << " " << plot_postfix;
 	  } else {
-	    plot_out << ", " << range_options << " \"" << data_filename << "\" " << " title \"" << series_title << "\" "  << plot_options << " " << plot_postfix;
+	    plot_out << ", \"" << data_filename << "\" " << " title \"" << series_title << "\" "  << plot_options << " " << plot_postfix;
 	  }
 	  pre_out << pre_gnuplot_commands << std::endl;
 	  post_out << extra_gnuplot_commands << std::endl;
@@ -382,7 +388,7 @@ namespace plot_server {
 	      // ok, add the line and then add our script and g tags
 	      out << line << std::endl;
 	      out << "<script xlink:href=\"SVGPan.js\"/>" << std::endl;
-	      out << "<g id=\"viewport\" transform=\"translate(200,200)\">" << std::endl;
+	      out << "<g id=\"viewport\" transform=\"translate(0,0)\">" << std::endl;
 	      looking_for_desc = false;
 	      looking_for_end_svg = true;
 	    } else if( looking_for_end_svg &&
