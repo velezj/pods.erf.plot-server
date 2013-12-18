@@ -50,6 +50,24 @@ pods_install_pkg_config_file(plot-server-api
     VERSION 0.0.1)
 
 
+add_library( plot-server-util SHARED
+  src/util/color.cpp
+)
+pods_install_headers(
+  src/util/color.hpp
+  DESTINATION
+  plot-server/util
+)
+pods_use_pkg_config_packages(plot-server-util plot-server-api)
+pods_install_libraries( plot-server-util )
+pods_install_pkg_config_file(plot-server-util
+    CFLAGS
+    LIBS -lplot-server-util
+    REQUIRES plot-server-api
+    VERSION 0.0.1)
+
+
+
 add_library( plot-server-plotter SHARED
   src/plotter/plotter.cpp
 )

@@ -18,3 +18,9 @@ add_executable( plot-server-test-plotter
   test-plotter.cpp )
 pods_use_pkg_config_packages( plot-server-test-plotter plot-server-plotter )
 pods_install_executables( plot-server-test-plotter )
+
+
+add_executable( plot-server-test-color
+  test-color.cpp )
+pods_use_pkg_config_packages( plot-server-test-color plot-server-util )
+pods_install_executables( plot-server-test-color )
