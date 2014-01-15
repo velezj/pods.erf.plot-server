@@ -2,6 +2,7 @@
 #include "plot.hpp"
 #include "internal.hpp"
 #include <boost/chrono.hpp>
+#include <boost/lexical_cast.hpp>
 #include <sstream>
 
 using namespace boost::property_tree;
@@ -152,9 +153,14 @@ namespace plot_server {
     //=============================================================
 
     std::vector<std::string>
-    fetch_known_plots()
+    fetch_known_plots( const boost::optional<size_t>& max_returned )
     {
-      ptree view = internal::globaldb().fetch( std::string("_design/docs_by_type/_view/all_plots?descending=true&include_docs=false") );
+      ptree view;
+      if( !max_returned ) {
+	view = internal::globaldb().fetch( std::string("_design/docs_by_type/_view/all_plots?descending=true&include_docs=false") );
+      } else {
+	view = internal::globaldb().fetch( std::string("_design/docs_by_type/_view/all_plots?descending=true&include_docs=false&limit="+boost::lexical_cast<std::string>(*max_returned) ) );
+      }
       std::vector<std::string> ids;
       for( ptree::value_type c : view.get_child( "rows" ) ) {
 	ids.push_back( c.second.get<std::string>("id") );

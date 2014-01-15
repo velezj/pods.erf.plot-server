@@ -129,8 +129,9 @@ namespace plot_server {
 
     // Description:
     // Returns a list of all known plot ids
+    // or up to the given number (if provided)
     std::vector<std::string>
-    fetch_known_plots();
+    fetch_known_plots(const boost::optional<size_t>& max_returned = boost::optional<size_t>() );
 
     //===============================================================
 

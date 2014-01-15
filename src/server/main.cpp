@@ -19,10 +19,11 @@ static int handle_plot_uri_test( struct mg_connection *conn )
 }
 
 
-static int handle_plot_listing( struct mg_connection* conn )
+static int handle_plot_listing( struct mg_connection* conn,
+				const size_t& limit )
 {
   std::vector<std::string> plot_ids =
-    plot_server::api::fetch_known_plots();
+    plot_server::api::fetch_known_plots( limit );
   std::ostringstream oss;
   oss << "HTTP/1.0 200 ok\r\n\r\n";
   oss << "<html><body>";
@@ -98,7 +99,7 @@ static int handle_plot_uri( struct mg_connection* conn )
   // ok, if we have no query and the uri is *just* /plot then
   // we really only list any known plots (from couchdb :-) )
   if( uri == "/plot" && query_string == "" ) {
-    return handle_plot_listing( conn );
+    return handle_plot_listing( conn, 30 );
   } 
 
   char plot_id[256];
