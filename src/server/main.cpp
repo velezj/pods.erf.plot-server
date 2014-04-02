@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#define BOOST_CHRONO_HEADER_ONLY
 #include <boost/chrono.hpp>
 #include <ctime>
 #include <cstring>
@@ -46,7 +47,7 @@ static int handle_plot_listing( struct mg_connection* conn,
       if( diff_min.count() < 60 ) {
 	oss << "<span style=\"color : red\">[created " << diff_min.count() << " minutes ago!]</span>";
       } else {
-	
+	 
 	time_t created_time = boost::chrono::system_clock::to_time_t(tp);
 	oss << "[created on: " << ctime(&created_time) << "]";
 	
