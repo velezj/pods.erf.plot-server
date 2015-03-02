@@ -22,7 +22,7 @@ namespace plot_server {
       
       // Description:
       // Opens and assigns the blobal databse instance
-      void open_globaldb( const boost::network::uri::uri& url );
+      void open_globaldb( const std::string& url );
 
       //===============================================================
       

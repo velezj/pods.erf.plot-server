@@ -5,7 +5,6 @@
 using namespace boost::property_tree;
 using namespace couchdb;
 using namespace std;
-using namespace boost::network::uri;
 
 
 namespace plot_server {
@@ -14,11 +13,11 @@ namespace plot_server {
 
       //=============================================================
 
-      static Couchdb _global_couchdb( uri("http://localhost:5984/plots-database/") );
+      static Couchdb _global_couchdb( "http://localhost:5984/plots-database/");
       
       //=============================================================
       
-      void open_globaldb( const uri& url )
+      void open_globaldb( const std::string& url )
       {
 	_global_couchdb = Couchdb( url );
       }
