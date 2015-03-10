@@ -11,18 +11,39 @@ namespace plot_server {
   namespace api {
     namespace internal {
 
+      //===============================================================
+
+      // Description:
+      // Set the base url for ouchdb instances, returning the previously
+      // set base url
+      std::string set_base_url( const std::string& url );
+      
+      
+      //===============================================================
+
+      // Description:
+      // Sets the curent namespace for plots, returning previous one.
+      // THe namespace specifies the base databse where plots are added
+      std::string set_namespace( const std::string& ns );
 
       //===============================================================
 
       // Description:
-      // returns the global databse isntance (couchdb)
-      couchdb::Couchdb& globaldb();
+      // Returns teh plot namespaces db
+      couchdb::Couchdb& namespacesdb();
+      
+      
+      //===============================================================
+
+      // Description:
+      // returns the current databse isntance (couchdb)
+      couchdb::Couchdb& currentdb();
 
       //===============================================================
       
       // Description:
-      // Opens and assigns the blobal databse instance
-      void open_globaldb( const std::string& url );
+      // Opens and assigns the current databse instance
+      void open_currentdb( const std::string& url );
 
       //===============================================================
       

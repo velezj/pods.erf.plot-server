@@ -33,7 +33,7 @@ int main( int argc, char** argv )
   std::vector< std::string > plot_2_series;
   plot_2_series.push_back( series_1_id );
   plot_2_series.push_back( series_2_id );
-  std::string plot_2 = create_plot( ptree(), plot_2_series, std::string("a-test-plot-2") );
+  std::string plot_2 = create_plot( ptree(), plot_2_series, std::string("a-test-plot-2"), std::string("test-plot-with-2-series") );
   
 
   // add a sequence with both plots

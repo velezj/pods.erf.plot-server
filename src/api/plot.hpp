@@ -18,6 +18,15 @@ namespace plot_server {
 
     //===============================================================
 
+    // Descriotion:
+    // Set the current plot namespace for the followign plot commands.
+    // Returns the previous namespace
+    std::string
+    set_namespace( const std::string& ns );
+
+
+    //===============================================================
+
     // Description:
     // A 'data' point for plots.
     // This is a 3D point plus a mapping of string attributes by name.
@@ -123,7 +132,7 @@ namespace plot_server {
     // Description:
     // Returns a list of all known series ids
     std::vector<std::string>
-    fetch_known_data_series();
+    fetch_known_data_series(const boost::optional<size_t>& max_returned = boost::optional<size_t>() );
 
     //===============================================================
 
@@ -138,10 +147,15 @@ namespace plot_server {
     // Description:
     // Returns a list of all known plot sequence ids
     std::vector<std::string>
-    fetch_known_plot_sequences();
+    fetch_known_plot_sequences(const boost::optional<size_t>& max_returned = boost::optional<size_t>() );
 
     //===============================================================
 
+    // Description:
+    // Returns a list of all known plot namespaces
+    std::vector<std::string>
+    fetch_known_namespaces(const boost::optional<size_t>& max_returned = boost::optional<size_t>() );
+    
     //===============================================================
     //===============================================================
     //===============================================================

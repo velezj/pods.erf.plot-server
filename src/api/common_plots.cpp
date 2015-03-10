@@ -86,7 +86,7 @@ namespace plot_server {
       // create a config for data series, reflect where the data came from
       ptree config;
       for( auto id : source_series_ids ) {
-	config.add( "sources.", id );
+	config.push_back( ptree::value_type("sources", ptree(id) ) );
       }
       
       // make this data series be a histogram data series
@@ -158,7 +158,7 @@ namespace plot_server {
 
       // add the sources for this quantiles
       for( auto id : source_series_ids ) {
-	config.add( "sources.", id );
+	config.push_back( ptree::value_type( "sources", ptree(id) ) );
       }
       
       // create teh dat aseries data (really only a single data_point!
@@ -207,7 +207,7 @@ namespace plot_server {
       // make sure we get all hte compute quantials
       std::vector<std::string> atts = { coordinate, dimension, width, factor };
       for( std::string at : atts ) {
-	config.add( "wanted_attributes.", at );
+	config.push_back( ptree::value_type( "wanted_attributes", ptree(at) ) );
       }
       
       

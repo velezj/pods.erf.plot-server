@@ -13,6 +13,14 @@ using namespace std;
 namespace plot_server {
   namespace api {
 
+    //=============================================================
+
+    string
+    set_namespace( const string& ns )
+    {
+      return internal::set_namespace( ns );
+    }
+    
     
     //=============================================================
 
@@ -23,9 +31,12 @@ namespace plot_server {
 		     const boost::optional<std::string>& wanted_id )
     {
       ptree doc;
+      ptree data_doc;
       for( auto dpoint : data ) {
-	doc.add_child( "data_series.data.", dpoint.attributes );
+	data_doc.push_back( ptree::value_type("", dpoint.attributes ) );
+	//doc.add_child( "data_series.data", dpoint.attributes );
       }
+      doc.put_child( "data_series.data", data_doc );
       doc.put_child( "config", series_config );
       if( title ) {
 	doc.put( "config.title", *title );
@@ -35,10 +46,10 @@ namespace plot_server {
       doc.put( "created" , oss.str() );
       ptree res;
       if( wanted_id ) {
-	res = internal::globaldb().try_ensure_substructure( wanted_id.get(),
+	res = internal::currentdb().try_ensure_substructure( wanted_id.get(),
 							    doc );
       } else {
-	res = internal::globaldb().save( doc );
+	res = internal::currentdb().save( doc );
       }
       return res.get<string>( "id" );
     }
@@ -50,8 +61,10 @@ namespace plot_server {
 				  const string& plot_id )
     {
       ptree plot_doc = internal::fetch_plot( plot_id );
-      plot_doc.add( "plot.data_series.", data_series_id );
-      ptree res = internal::globaldb().save( plot_doc, plot_id );
+      ptree ds_doc = plot_doc.get_child( "plot.data_series", ptree() );
+      ds_doc.push_back( ptree::value_type("", ptree(data_series_id) ) );
+      plot_doc.put_child( "plot.data_series", ds_doc );
+      ptree res = internal::currentdb().save( plot_doc, plot_id );
     }
 
     //=============================================================
@@ -60,8 +73,10 @@ namespace plot_server {
 			   const string& target_plot_id )
     {
       ptree plot_doc = internal::fetch_plot( target_plot_id );
-      plot_doc.add( "plot.composite_plots.", source_plot_id );
-      ptree res = internal::globaldb().save( plot_doc, target_plot_id );
+      ptree cp_doc = plot_doc.get_child( "plot.composite_plots", ptree() );
+      cp_doc.push_back( ptree::value_type( "", ptree(source_plot_id ) ) );
+      plot_doc.put_child( "plot.composite_plots", cp_doc );
+      ptree res = internal::currentdb().save( plot_doc, target_plot_id );
     }
 
 
@@ -72,8 +87,10 @@ namespace plot_server {
 				    const string& plot_sequence_id )
     {
       ptree seq_doc = internal::fetch_plot_sequence( plot_sequence_id );
-      seq_doc.add( "plot_sequence.plots.", plot_id );
-      ptree res = internal::globaldb().save( seq_doc, plot_sequence_id );
+      ptree p_doc = seq_doc.get_child( "plot_sequence.plots", ptree());
+      p_doc.push_back( ptree::value_type( "", ptree( plot_id) ) );
+      seq_doc.put_child( "plot_sequence.plots", p_doc );
+      ptree res = internal::currentdb().save( seq_doc, plot_sequence_id );
     }
 
     //=============================================================
@@ -94,10 +111,10 @@ namespace plot_server {
       plot_doc.put( "created" , oss.str() );
       ptree res;
       if( wanted_id ) {
-	res = internal::globaldb().try_ensure_substructure( wanted_id.get(),
+	res = internal::currentdb().try_ensure_substructure( wanted_id.get(),
 							    plot_doc );
       } else {
-	res = internal::globaldb().save( plot_doc );
+	res = internal::currentdb().save( plot_doc );
       }
       string id = res.get<string>("id");
       for( string series_id : data_series ) {
@@ -125,10 +142,10 @@ namespace plot_server {
       seq_doc.put( "created" , oss.str() );
       ptree res;
       if( wanted_id ) {
-	res = internal::globaldb().try_ensure_substructure( wanted_id.get(), 
+	res = internal::currentdb().try_ensure_substructure( wanted_id.get(), 
 							    seq_doc );
       } else {
-	res = internal::globaldb().save( seq_doc );
+	res = internal::currentdb().save( seq_doc );
       }
       string id = res.get<string>( "id" );
       for( string plot_id : plots ) {
@@ -140,9 +157,14 @@ namespace plot_server {
     //=============================================================
 
     std::vector<std::string>
-    fetch_known_data_series()
+    fetch_known_data_series(const boost::optional<size_t>& max_returned)
     {
-      ptree view = internal::globaldb().fetch( std::string("_design/docs_by_type/_view/all_data_series") );
+      ptree view;
+      if( !max_returned ) {
+	view = internal::currentdb().fetch( "_design/docs_by_type/_view/all_data_series");
+      } else {
+	view = internal::currentdb().fetch( string("_design/docs_by_type/_view/all_data_series") + string("?limit=") + boost::lexical_cast<std::string>(*max_returned));
+      }
       std::vector<std::string> ids;
       for( ptree::value_type c : view.get_child( "rows" ) ) {
 	ids.push_back( c.second.get<std::string>("id") );
@@ -157,9 +179,9 @@ namespace plot_server {
     {
       ptree view;
       if( !max_returned ) {
-	view = internal::globaldb().fetch( std::string("_design/docs_by_type/_view/all_plots?descending=true&include_docs=false") );
+	view = internal::currentdb().fetch("_design/docs_by_type/_view/all_plots?descending=true&include_docs=false");
       } else {
-	view = internal::globaldb().fetch( std::string("_design/docs_by_type/_view/all_plots?descending=true&include_docs=false&limit="+boost::lexical_cast<std::string>(*max_returned) ) );
+	view = internal::currentdb().fetch( string("_design/docs_by_type/_view/all_plots?descending=true&include_docs=false&limit=") + boost::lexical_cast<std::string>(*max_returned));
       }
       std::vector<std::string> ids;
       for( ptree::value_type c : view.get_child( "rows" ) ) {
@@ -171,9 +193,14 @@ namespace plot_server {
     //=============================================================
 
     std::vector<std::string>
-    fetch_known_plot_sequences()
+    fetch_known_plot_sequences(const boost::optional<size_t>& max_returned)
     {
-      ptree view = internal::globaldb().fetch( std::string("_design/docs_by_type/_view/all_plot_sequences") );
+      ptree view;
+      if( !max_returned ) {
+	view = internal::currentdb().fetch("_design/docs_by_type/_view/all_plot_sequences");
+      } else {
+	view = internal::currentdb().fetch( string("_design/docs_by_type/_view/all_plot_sequences") + string("?limit=") + boost::lexical_cast<std::string>(*max_returned));
+      }
       std::vector<std::string> ids;
       for( ptree::value_type c : view.get_child( "rows" ) ) {
 	ids.push_back( c.second.get<std::string>("id") );
@@ -182,6 +209,23 @@ namespace plot_server {
     }
 
     //=============================================================
+
+    vector<string>
+    fetch_known_namespaces( const boost::optional<size_t>& max_returned )
+    {
+      ptree view;
+      if( !max_returned ) {
+	view = internal::namespacesdb().fetch( "_all_docs" );
+      } else {
+	view = internal::namespacesdb().fetch( string("_all_docs") + string("?limit=") + boost::lexical_cast<std::string>(*max_returned) );
+      }
+      vector<string> ids;
+      for( ptree::value_type c : view.get_child( "rows" ) ) {
+	ids.push_back( c.second.get<string>("id"));
+      }
+      return ids;
+    }
+    
     //=============================================================
     //=============================================================
     //=============================================================
