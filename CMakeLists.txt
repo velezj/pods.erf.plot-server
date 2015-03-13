@@ -85,6 +85,12 @@ pods_install_pkg_config_file(plot-server-plotter
     LIBS -lplot-server-plotter
     REQUIRES plot-server-api
     VERSION 1.0.1)
+# install the MathBox javascript files
+install( DIRECTORY MathBox.js/
+  DESTINATION share/www/
+  FILES_MATCHING
+  PATTERN "*.js"
+  PATTERN "*.html" )
 
 
 add_executable( plot-server-server

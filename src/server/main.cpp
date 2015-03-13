@@ -214,6 +214,42 @@ static int handle_gnuplot_uri( struct mg_connection* conn )
   return 1;
 }
 
+int handle_test_plotter_uri(struct mg_connection* conn )
+{
+  std::string uri = conn->uri;
+  std::string query_string = "";
+  if( conn->query_string ) {
+    query_string = conn->query_string;
+  }
+
+    // ok, find the relative file wanted
+  std::string relative_filepath = query_string.substr( query_string.find( "path="), query_string.find( "&" ) ).substr( std::string("path=").size() );
+  std::string full_path = std::string(USER_SHARE_DIR) + "test-plotter/" + relative_filepath;
+
+  // see if there is a file relative to the user share directory
+  std::ifstream is( full_path );
+
+  // create the response strream
+  std::ostringstream oss;
+  
+  if( is ) {
+
+    // found the file, serve it's content
+    oss << "HTTP/1.0 200 OK\r\n\r\n";
+    oss << is.rdbuf();
+    
+  } else {
+
+    // no file, return a 404
+    std::cout << " ** test-plotter file not found!" << std::endl;
+    oss << "HTTP/1.0 404 Not Found\r\n\r\n";
+  }
+  
+  mg_write( conn, oss.str().c_str(), oss.str().size() );  
+
+  return 1;
+}
+
 int main( int argc, char** argv ) {
 
   std::cout << "Serving on port 9999, USER_SHARE_DIR=" << USER_SHARE_DIR << std::endl;
@@ -221,9 +257,11 @@ int main( int argc, char** argv ) {
   // create a mongoose server
   struct mg_server *server = mg_create_server(NULL);
   mg_set_option(server, "listening_port", "9999");
+  mg_set_option(server, "document_root", USER_SHARE_DIR "/www/" );
   mg_add_uri_handler(server, "/plot", &handle_plot_uri);
   mg_add_uri_handler(server, "/namespace", &handle_namespace_uri);
   mg_add_uri_handler(server, "/gnuplot", &handle_gnuplot_uri);
+  mg_add_uri_handler(server, "/test-plotter", &handle_test_plotter_uri);
   for (;;) mg_poll_server(server, 1000);  // Infinite loop, Ctrl-C to stop
   mg_destroy_server(&server);
   return 0;
