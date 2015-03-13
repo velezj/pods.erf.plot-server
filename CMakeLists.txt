@@ -29,7 +29,7 @@ pods_install_pkg_config_file(plot-server-api-internal
     CFLAGS
     LIBS -lplot-server-api-internal
     REQUIRES boost-1.54.0 erf-couchdb
-    VERSION 0.0.1)
+    VERSION 1.0.1)
 
 
 add_library( plot-server-api SHARED
@@ -49,7 +49,7 @@ pods_install_pkg_config_file(plot-server-api
     CFLAGS
     LIBS -lplot-server-api
     REQUIRES plot-server-api-internal
-    VERSION 0.0.1)
+    VERSION 1.0.1)
 
 
 add_library( plot-server-util SHARED
@@ -84,9 +84,7 @@ pods_install_pkg_config_file(plot-server-plotter
     CFLAGS
     LIBS -lplot-server-plotter
     REQUIRES plot-server-api
-    VERSION 0.0.1)
-INSTALL(FILES src/server/js/SVGPan.js 
-  DESTINATION bin )
+    VERSION 1.0.1)
 
 
 add_executable( plot-server-server
