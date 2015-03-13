@@ -12,6 +12,8 @@ if( USE_PEDANTIC )
     add_definitions( -pedantic )
 endif (USE_PEDANTIC)
 
+# include the share directory in installations root
+add_definitions( -DUSER_SHARE_DIR="${CMAKE_INSTALL_PREFIX}/share/" )
 
 add_library( plot-server-api-internal SHARED
   src/api/internal.cpp

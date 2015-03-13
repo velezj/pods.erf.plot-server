@@ -237,7 +237,8 @@ namespace plot_server {
 	  size_t plot_height
 	    = plot_doc.get( "config.height", 700 );
 	  std::ostringstream term_oss;
-	  term_oss << "svg size " << plot_width << "," << plot_height << " dynamic mouse standalone enhanced";
+	  //term_oss << "svg size " << plot_width << "," << plot_height << " dynamic enhanced mouse standalone";
+	  term_oss << "canvas standalone mousing enhanced jsdir '/gnuplot?path=' size " << plot_width << "," << plot_height;
 	  
 	  std::string terminal 
 	    = plot_doc.get( "config.terminal",
@@ -380,7 +381,7 @@ namespace plot_server {
 
 	  // we want to add a special group to add teh SVGPan.js code
 	  bool looking_for_end_svg = false;
-	  bool looking_for_desc = true;
+	  bool looking_for_desc = false;
 	  bool looking_for_viewbox = true;
 	  while( fin ) {
 	    std::string line;
@@ -413,12 +414,12 @@ namespace plot_server {
 	  // 	     std::ostreambuf_iterator<char>(out) );
 	  
 	  // remove all temporary files used
-	  if( plot_doc.get( "config.interactive", false ) == false &&
-	      plot_doc.get( "config.keep_gnuplot_files", false ) == false ) {
-	    for( std::string fn : temp_filenames ) {
-	      remove( fn.c_str() );
-	    }
-	  }
+	  // if( plot_doc.get( "config.interactive", false ) == false &&
+	  //     plot_doc.get( "config.keep_gnuplot_files", false ) == false ) {
+	  //   for( std::string fn : temp_filenames ) {
+	  //     remove( fn.c_str() );
+	  //   }
+	  // }
 	  
 	}
       }
