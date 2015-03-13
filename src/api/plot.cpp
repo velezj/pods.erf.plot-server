@@ -57,25 +57,40 @@ namespace plot_server {
 
     //=============================================================
 
+    void add_data_series_to_plot_doc( ptree& plot_doc,
+				      const std::string& data_series_id )
+    {
+      ptree ds_doc = plot_doc.get_child( "plot.data_series", ptree() );
+      ds_doc.push_back( ptree::value_type("", ptree(data_series_id) ) );
+      plot_doc.put_child( "plot.data_series", ds_doc );
+    }
+
+
     void add_data_series_to_plot( const string& data_series_id,
 				  const string& plot_id )
     {
       ptree plot_doc = internal::fetch_plot( plot_id );
-      ptree ds_doc = plot_doc.get_child( "plot.data_series", ptree() );
-      ds_doc.push_back( ptree::value_type("", ptree(data_series_id) ) );
-      plot_doc.put_child( "plot.data_series", ds_doc );
+      add_data_series_to_plot_doc( plot_doc,
+				   data_series_id );
       ptree res = internal::currentdb().save( plot_doc, plot_id );
     }
 
+    
     //=============================================================
+
+    void add_plot_to_plot_doc( ptree& plot_doc,
+			       const std::string& source_plot_id )
+    {
+      ptree cp_doc = plot_doc.get_child( "plot.composite_plots", ptree() );
+      cp_doc.push_back( ptree::value_type( "", ptree(source_plot_id ) ) );
+      plot_doc.put_child( "plot.composite_plots", cp_doc );
+    }
 
     void add_plot_to_plot( const string& source_plot_id,
 			   const string& target_plot_id )
     {
       ptree plot_doc = internal::fetch_plot( target_plot_id );
-      ptree cp_doc = plot_doc.get_child( "plot.composite_plots", ptree() );
-      cp_doc.push_back( ptree::value_type( "", ptree(source_plot_id ) ) );
-      plot_doc.put_child( "plot.composite_plots", cp_doc );
+      add_plot_to_plot_doc( plot_doc, source_plot_id );
       ptree res = internal::currentdb().save( plot_doc, target_plot_id );
     }
 
@@ -83,13 +98,20 @@ namespace plot_server {
 
     //=============================================================
 
+    void add_plot_to_plot_sequence_doc( ptree& seq_doc,
+				        const std::string& plot_id )
+    {
+      ptree p_doc = seq_doc.get_child( "plot_sequence.plots", ptree());
+      p_doc.push_back( ptree::value_type( "", ptree( plot_id) ) );
+      seq_doc.put_child( "plot_sequence.plots", p_doc );
+    }
+
     void add_plot_to_plot_sequence( const string& plot_id,
 				    const string& plot_sequence_id )
     {
       ptree seq_doc = internal::fetch_plot_sequence( plot_sequence_id );
-      ptree p_doc = seq_doc.get_child( "plot_sequence.plots", ptree());
-      p_doc.push_back( ptree::value_type( "", ptree( plot_id) ) );
-      seq_doc.put_child( "plot_sequence.plots", p_doc );
+      add_plot_to_plot_sequence_doc( seq_doc,
+				     plot_id );
       ptree res = internal::currentdb().save( seq_doc, plot_sequence_id );
     }
 
@@ -109,6 +131,9 @@ namespace plot_server {
       std::ostringstream oss;
       oss << boost::chrono::system_clock::now();
       plot_doc.put( "created" , oss.str() );
+      for( string series_id : data_series ) {
+	add_data_series_to_plot_doc( plot_doc, series_id );
+      }
       ptree res;
       if( wanted_id ) {
 	res = internal::currentdb().try_ensure_substructure( wanted_id.get(),
@@ -117,9 +142,6 @@ namespace plot_server {
 	res = internal::currentdb().save( plot_doc );
       }
       string id = res.get<string>("id");
-      for( string series_id : data_series ) {
-	add_data_series_to_plot( series_id, id );
-      }
       return id;
     }
 
@@ -140,6 +162,9 @@ namespace plot_server {
       std::ostringstream oss;
       oss << boost::chrono::system_clock::now();
       seq_doc.put( "created" , oss.str() );
+      for( string plot_id : plots ) {
+	add_plot_to_plot_sequence_doc( seq_doc, plot_id );
+      }
       ptree res;
       if( wanted_id ) {
 	res = internal::currentdb().try_ensure_substructure( wanted_id.get(), 
@@ -148,9 +173,6 @@ namespace plot_server {
 	res = internal::currentdb().save( seq_doc );
       }
       string id = res.get<string>( "id" );
-      for( string plot_id : plots ) {
-	add_plot_to_plot_sequence( plot_id, id );
-      }
       return id;
     }
     

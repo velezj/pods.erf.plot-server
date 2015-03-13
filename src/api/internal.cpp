@@ -43,7 +43,8 @@ namespace plot_server {
 	string temp = _current_namespace;
 	_current_namespace = ns;
 	ptree ns_doc;
-	ns_doc.put( "available", true );
+	ns_doc.put( "ns.available", "true" );
+	ns_doc.put( "ns.name", ns );
 	namespacesdb().try_ensure_substructure( _current_namespace, ns_doc );
 	_current_couchdb
 	  = couchdb::Couchdb( _base_url + "plots_" + _current_namespace + "/");

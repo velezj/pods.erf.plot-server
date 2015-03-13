@@ -16,7 +16,9 @@ pods_install_executables( plot-server-test-common-plots )
 
 add_executable( plot-server-test-plotter
   test-plotter.cpp )
-pods_use_pkg_config_packages( plot-server-test-plotter plot-server-plotter )
+pods_use_pkg_config_packages( plot-server-test-plotter
+  plot-server-plotter
+  boost-1.54.0-program-options)
 pods_install_executables( plot-server-test-plotter )
 
 
