@@ -36,6 +36,29 @@ static void ensure_couchdb_views()
 }
 
 
+static void write_namespace_nav_bar( const std::size_t& limit,
+				     const std::string& redirect_url,
+				     std::ostream& os )
+{
+  std::vector<std::string> spaces
+    = plot_server::api::fetch_known_namespaces( limit );
+  os << "Namespaces: <div style=\"width: 100%;\">";
+  for( auto ns : spaces ) {
+    os << "<span style=\"margin:auto\">"
+       << "<a href=\"namespace?namespace_id=" << ns;
+    if( redirect_url.empty() == false ) {
+      os << "&redirect_url=" << redirect_url;
+    }
+    os << "\">"
+       << ns
+       << "</a>"
+       << " "
+       << "</span>";
+  }
+  os << "</div>"; 
+}
+
+
 static int handle_plot_uri_test( struct mg_connection *conn )
 {
   std::ostringstream oss;
@@ -53,6 +76,11 @@ static int handle_plot_listing( struct mg_connection* conn,
   std::ostringstream oss;
   oss << "HTTP/1.0 200 ok\r\n\r\n";
   oss << "<html><body>";
+
+  // ok, buildup the namespaces nav bar
+  write_namespace_nav_bar( 20, "plot", oss );
+  oss << "<hr><br><br>";
+  
   oss << "<ol>" << std::endl;
   for( std::string id : plot_ids ) {
     boost::property_tree::ptree plot_doc = plot_server::api::internal::fetch_plot( id );
@@ -183,6 +211,10 @@ static int handle_namespace_uri( struct mg_connection* conn )
   char namespace_id[256];
   mg_get_var( conn, "namespace_id", namespace_id, 255 );
 
+  char redirect_url[256];
+  int res = mg_get_var( conn, "redirect_url", redirect_url, 255 );
+  
+
   // ok, we have a uri beyond namespace
   // so actually switch to this namespace
   std::string old_namespace
@@ -195,7 +227,12 @@ static int handle_namespace_uri( struct mg_connection* conn )
   // return a message to the user saying we switched!
   std::ostringstream oss;
   oss << "HTTP/1.0 200 OK\r\n\r\n";
-  oss << "<html><body>Switched namespace to <b>" << namespace_id << "</b> from " << old_namespace << "</body></html>";
+  oss << "<html>";
+  if( res > 0 ) {
+    // want a redirection to apply meta tag
+    oss << "<head><meta http-equiv=\"refresh\" content=\"1;url=" << redirect_url << "\" /></head>";
+  }
+  oss << "<body>Switched namespace to <b>" << namespace_id << "</b> from " << old_namespace << "</body></html>";
   mg_write( conn, oss.str().c_str(), oss.str().size() );
   return 1;
 }
