@@ -56,6 +56,8 @@ namespace plot_server {
 				    data_point_t& max_point )
     {
       bool first_point = true;
+      double minx, miny, minz;
+      double maxx, maxy, maxz;
       for( ptree series_doc : series ) {
 	
 	// for each data point
@@ -64,20 +66,35 @@ namespace plot_server {
 	  // if we are the first, set bounds
 	  data_point_t d = data_point_t( data_doc.second );
 	  if( first_point ) {
-	    min_point = d;
-	    max_point = d;
+	    minx = maxx = d.get("x",0.0);
+	    miny = maxy = d.get("y",0.0);
+	    minz = maxz = d.get("z",0.0);
+	    
 	    first_point = false;
 	  }
+
+	  double x = d.get("x", 0.0);
+	  double y = d.get("y", 0.0);
+	  double z = d.get("z", 0.0);
+	  if( x < minx )
+	    minx = x;
+	  if( x > maxx )
+	    maxx = x;
+	  if( y < miny )
+	    miny = y;
+	  if( y > maxy )
+	    maxy = y;
+	  if( z < minz )
+	    minz = z;
+	  if( z > maxz )
+	    maxz = z;
 	  
-	  // check the point against hte bounds
-	  if( is_less_than_xyz( d, min_point ) ) {
-	    min_point = d;
-	  }
-	  if( is_less_than_xyz( max_point, d ) ) {
-	    max_point = d;
-	  }
 	}
       }
+
+      min_point = data_point_t( minx, miny, minz );
+      max_point = data_point_t( maxx, maxy, maxz );
+      
     }
 
 
@@ -440,11 +457,146 @@ namespace plot_server {
 
 
       //================================================================
+      
+      namespace mathboxjs {
+	
+	void plot( const ptree& plot_doc,
+		   const std::vector<ptree>& series,
+		   const data_point_t& min_point,
+		   const data_point_t& max_point,
+		   std::ostream& out )
+	{
+
+	  data_point_t the_min_point = min_point;
+	  data_point_t the_max_point = max_point;
+	  the_min_point.put( "x" , min_point.get<double>("x") - 1.0 );
+	  the_min_point.put( "y" , min_point.get<double>("y") - 1.0 );
+	  the_min_point.put( "z" , min_point.get<double>("z") - 1.0 );
+	  the_max_point.put( "x", max_point.get<double>("x") + 1.0 );
+	  the_max_point.put( "y", max_point.get<double>("y") + 1.0 );
+	  the_max_point.put( "z", max_point.get<double>("z") + 1.0 );
+	  
+
+	  std::ostringstream oss;
+
+	  // craete the html header and dom ready func
+	  oss <<
+	    "<html><head><script type=\"text/javascript\" charset=\"utf-8\" src=\"MathBox-bundle.min.js\"></script>\
+\
+  <script type=\"text/javascript\">\
+  /**\
+   * Bootstrap\
+   */\
+  DomReady.ready(function() {\
+    ThreeBox.preload([\
+      'shaders/snippets.glsl.html',\
+    ], function () {\
+\
+      var mathbox = window.mathbox = mathBox({\
+        cameraControls: true,\
+        cursor:         true,\
+        controlClass:   ThreeBox.OrbitControls,\
+        elementResize:  true,\
+        fullscreen:     true,\
+        screenshot:     true,\
+        stats:          false,\
+        scale:          1,\
+      }).start();"
+	    
+	    // create viewport
+	      <<
+	    "mathbox.viewport({\
+type: 'cartesian',\
+range: [[" << the_min_point("x") << ", " << the_max_point("x") << "],["
+	      << the_min_point("y") << ", " << the_max_point("y") << "],["
+	      << the_min_point("z") << ", " << the_max_point("z") << "]],\
+          scale: [1, 1, 1],\
+        })\
+        .camera({\
+          orbit: 3.5,\
+          phi: 2*3.14159/6,\
+          theta: 0.3,\
+        })\
+        .transition(300)\
+\
+        .axis({\
+          id: 'a',\
+          axis: 0,\
+          color: 0xa0a0a0,\
+          ticks: 5,\
+          lineWidth: 2,\
+          size: .05,\
+          labels: true,\
+        })\
+        .axis({\
+          id: 'b',\
+          axis: 1,\
+          color: 0xa0a0a0,\
+          ticks: 5,\
+          lineWidth: 2,\
+          size: .05,\
+          zero: false,\
+          labels: true,\
+        })\
+        .axis({\
+          id: 'c',\
+          axis: 2,\
+          color: 0xa0a0a0,\
+          ticks: 5,\
+          lineWidth: 2,\
+          size: .05,\
+          zero: false,\
+          labels: true,\
+        })\
+\
+        .grid({\
+          axis: [0, 2],\
+          color: 0xc0c0c0,\
+          lineWidth: 1,\
+        });" << std::endl;
+
+	  for( size_t si = 0; si < series.size(); ++si ) {
+	    ptree ds = series[si];
+	    ptree data = ds.get_child("data_series.data");
+	    ptree::const_iterator iter;
+	    std::vector<double> x,y,z;
+	    for( iter = data.begin(); iter != data.end(); ++iter ) {
+	      x.push_back( iter->second.get<double>("x", 0.0) );
+	      y.push_back( iter->second.get<double>("y", 0.0) );
+	      z.push_back( iter->second.get<double>("z", 0.0) );
+	    }
+
+	    size_t n = x.size();
+
+	    // write out hte curve information
+	    oss << "mathbox.curve({n: " << n
+		<< ", domain: [0,1]"
+		<< ", data: [";
+	    for( size_t i = 0; i < n; ++i ) {
+	      oss << "[" << x[i] << "," << y[i] << "," << z[i] << "],";
+	    }
+	    oss << "]"
+		<< ", points: true"
+		<< ", line: true"
+		<< "});" << std::endl;
+	  }
+
+	  oss << "}); });" << std::endl;
+	  oss << "</script> </head><body></body></html>" << std::endl;
+
+	  out << oss.str();
+	  
+	}
+
+      }
+
+      
+      //================================================================
       //================================================================
       //================================================================
       //================================================================
 
-
+      
     }
 
     //================================================================
@@ -468,7 +620,7 @@ namespace plot_server {
       
       // Ok, now we have to plot each series using gnuplot
       // or the wanted backend
-      std::string backend = plot_doc.get( "config.backend", "gnuplot" );
+      std::string backend = plot_doc.get( "config.backend", "mathbox.js" );
       
       if( backend == "svg" ) {
 	backends::svg::plot( plot_doc, series, min_point, max_point, out );
@@ -476,6 +628,8 @@ namespace plot_server {
 	backends::gnuplot::plot( plot_doc, series, min_point, max_point, out );
       } else if( backend == "three.js" ) {
 	backends::threejs::plot( plot_doc, series, min_point, max_point, out );
+      } else if( backend == "mathbox.js" ) {
+	backends::mathboxjs::plot( plot_doc, series, min_point, max_point, out );
       }
       
     }
