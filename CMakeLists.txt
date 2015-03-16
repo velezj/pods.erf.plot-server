@@ -91,6 +91,9 @@ install( DIRECTORY MathBox.js/
   FILES_MATCHING
   PATTERN "*.js"
   PATTERN "*.html" )
+# install the couchdb views needed by server
+install( FILES src/server/couchdb_views.json
+  DESTINATION share/couchdb/views/plot-server/)
 
 
 add_executable( plot-server-server

@@ -8,6 +8,8 @@
 #include <iostream>
 #define BOOST_CHRONO_HEADER_ONLY
 #include <boost/chrono.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <ctime>
 #include <cstring>
 
@@ -15,6 +17,24 @@
 #ifndef USER_SHARE_DIR
 #define USER_SHARE_DIR ""
 #endif
+
+
+static void ensure_couchdb_views()
+{
+  std::string view_filename = USER_SHARE_DIR "/couchdb/views/plot-server/couchdb_views.json";
+  std::ifstream fin( view_filename );
+  if( !fin ) {
+    std::cerr << "Could not find Couchdb views file needed for server: "
+	      << view_filename
+	      << std::endl;
+  }
+  boost::property_tree::ptree views_doc;
+  boost::property_tree::json_parser::read_json( fin, views_doc );
+  plot_server::api::internal::currentdb()
+    .try_ensure_substructure( views_doc.get<std::string>("_id"),
+			      views_doc );
+}
+
 
 static int handle_plot_uri_test( struct mg_connection *conn )
 {
@@ -167,6 +187,10 @@ static int handle_namespace_uri( struct mg_connection* conn )
   // so actually switch to this namespace
   std::string old_namespace
     = plot_server::api::set_namespace( namespace_id );
+
+  // once we change the namespace, we want to make sure this
+  // new database has the wanted views :-)
+  ensure_couchdb_views();
   
   // return a message to the user saying we switched!
   std::ostringstream oss;
@@ -250,7 +274,11 @@ int handle_test_plotter_uri(struct mg_connection* conn )
   return 1;
 }
 
+
 int main( int argc, char** argv ) {
+
+  // make sure the couchdb has the views needed
+  ensure_couchdb_views();
 
   std::cout << "Serving on port 9999, USER_SHARE_DIR=" << USER_SHARE_DIR << std::endl;
 
